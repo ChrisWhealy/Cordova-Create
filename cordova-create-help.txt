@@ -1,4 +1,3 @@
-
 To create a new project using this command, open a terminal window and navigate to the folder where you want the project created and issue the following command:
 
   cva_create folder app_id app_name [platform list]
