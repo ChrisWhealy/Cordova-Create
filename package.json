@@ -5,13 +5,11 @@
   "engines": {
     "node": ">= 0.10.0"
   },
-  "author": [
-    {
-      "name": "John M. Wargo",
-      "email": "john@johnwargo.com",
-      "url": "http://www.johnwargo.com/"
-    }
-  ],
+  "author": "John M. Wargo <john@johnwargo.com> (http://www.johnwargo.com/)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johnwargo/Cordova-Create"
+  },
   "bin": {
     "cordova-create": "cordova-create.js"
   },
