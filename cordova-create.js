@@ -153,4 +153,7 @@ plugin_list.forEach(function (plugin) {
   shelljs.exec('cordova plugin add ' + plugin);
 });
 
-console.log("\nAll done!\n");
+//========================================================================
+// Finished
+//========================================================================
+console.log("\nAll done!\n".help);
