@@ -1,4 +1,4 @@
-CordovaCreate
+cordova-create
 =============
 
 A node command for creating a simple Cordova project with a couple of common plugins.
@@ -33,15 +33,15 @@ Usage
 
 To create a new project using this command, open a terminal window and navigate to the folder where you want the project created and issue the following command:
 
-	cva_create folder app_id app_name [platform list]
+	cordova_create folder app_id app_name [platform list]
 
 So, to create a sample Android project called Hello2 in a folder called hello_2 you would use the following command:
 
-	cva_create hello_2 com.johnwargo.hello2 Hello2 android
+	cordova_create hello_2 com.johnwargo.hello2 Hello2 android
 
 To create the same project, but include an iOS project as well, you would use the following command:
 
-	cva_create hello_2 com.johnwargo.hello2 Hello2 android ios
+	cordova_create hello_2 com.johnwargo.hello2 Hello2 android ios
 
 If you do not specify a platform list on the command line, the set of default platforms for your current operating system (described below) will be used. 
 
