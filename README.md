@@ -11,7 +11,7 @@ As I worked on my many Apache Cordova books, I found myself regularly creating C
 Requirements
 ============
 
-This module expects that you have a functional Apache Cordova development environment running. This includes the appropriate native SDKs (Android Development Tools [ADT], Xcode and so on), NodeJS and other associated tools. 
+This module expects that you have a functional Apache Cordova development environment running. This includes the appropriate native SDKs (Android Development Tools, Xcode and so on), NodeJS and other associated tools. 
 
 An excellent resource for information on how to setup a Cordova development environment is my [Apache Cordova 3 Programming](http://www.cordovaprogramming.com) book.
 
@@ -62,4 +62,4 @@ To customize the list of plugins that are added to the Cordova project created u
 Add or remove plugin IDs as needed. You can add third party plugins to this list as well. This should work as long as the Cordova CLI can load the plugins using the plugin's ID. Where this won't work is for locally installed plugins. If you want to use locally installed plugins, you will need to set a plugin search path during the call to the cordova create command. 
 
 * * *
-&copy; 2014 [John M. Wargo](http://www.johnwargo.com) - Please buy one of [my books](hhtp://www.johnwargobooks.com) if you like/use this.
+&copy; 2014 [John M. Wargo](http://www.johnwargo.com) - Please buy one of [my books](hhtp://www.johnwargobooks.com) if you like or use this.
