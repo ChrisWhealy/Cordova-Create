@@ -50,13 +50,6 @@ function showHelp() {
 }
 
 //========================================================================
-//Write out what we're running
-//========================================================================
-console.log("\n%s".info, theStars);
-console.log("Cordova Create".info);
-console.log(theStars.info);
-
-//========================================================================
 //Sort out the command line arguments
 //========================================================================
 var userArgs;
@@ -105,6 +98,7 @@ if (userArgs.length > 2) {
 } else {
   console.error("\nMissing one or more parameters, the proper command format is: ".error);
   console.error("\n  %s".error, cmdStr);
+  showHelp();
   process.exit(1);
 }
 
@@ -115,6 +109,13 @@ if (fs.existsSync(targetFolder)) {
   console.error("\nTarget folder %s already exists".error, targetFolder);
   process.exit(1);
 }
+
+//========================================================================
+//Write out what we're running
+//========================================================================
+console.log("\n%s".info, theStars);
+console.log("Cordova Create".info);
+console.log(theStars.info);
 
 //========================================================================
 //Tell the user what we're about to do

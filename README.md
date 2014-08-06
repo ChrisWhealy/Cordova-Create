@@ -43,6 +43,7 @@ To create the same project, but include an iOS project as well, you would use th
 
 	cva_create hello_2 com.johnwargo.hello2 Hello2 android ios
 
+If you do not specify a platform list on the command line, the set of default platforms for your current operating system (described below) will be used. 
 
 Customizing the Script
 ======================
