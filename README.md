@@ -8,7 +8,12 @@ Introduction
 
 As I worked on my many Apache Cordova books, I found myself regularly creating Cordova projects by typing the same commands over and over again. To make it easier for me, I created this simple command that creates a standard Cordova project, adds the platforms and a short set of common plugins I use in every project (console & dialogs).
 
-Perhaps I'll enhance this some day to add a command for adding all core plugins or passing the plugin list on the command line. Who knows, stay tuned.
+Requirements
+============
+
+This module expects that you have a functional Apache Cordova development environment running. This includes the appropriate native SDKs (Android Development Tools [ADT], Xcode and so on), NodeJS and other associated tools. 
+
+An excellent resource for information on how to setup a Cordova development environment is my [Apache Cordova 3 Programming](http://www.cordovaprogramming.com) book.
 
 Installation
 ============
@@ -38,6 +43,22 @@ To create the same project, but include an iOS project as well, you would use th
 
 	cva_create hello_2 com.johnwargo.hello2 Hello2 android ios
 
+
+Customizing the Script
+======================
+
+To customize the list of platforms that is used to create the project, look for the following two lines in the script file:
+
+	var default_platforms_ios = ['android', 'firefoxos', 'ios'];
+	var default_platforms_win = ['android', 'firefoxos', 'wp8'];
+
+Add or remove values from either array to as needed for your environment.
+
+To customize the list of plugins that are added to the Cordova project created using this script, look for the following variable definition:
+
+	var plugin_list = ['org.apache.cordova.console', 'org.apache.cordova.dialogs', 'org.apache.cordova.device'];
+
+Add or remove plugin IDs as needed. You can add third party plugins to this list as well. This should work as long as the Cordova CLI can load the plugins using the plugin's ID. Where this won't work is for locally installed plugins. If you want to use locally installed plugins, you will need to set a plugin search path during the call to the cordova create command. 
 
 * * *
 &copy; 2014 [John M. Wargo](http://www.johnwargo.com) - Please buy one of [my books](hhtp://www.johnwargobooks.com) if you like/use this.

@@ -1,5 +1,13 @@
 #!/usr/bin/env node
 
+//========================================================================
+// cordova-create
+//
+// A node command for creating a simple Cordova project with a couple 
+// of common plugins.
+//
+// by John M. Wargo (www.johnwargo.com)
+//========================================================================
 var colors = require('colors'),
   fs = require('fs'),
   path = require('path'),
@@ -11,7 +19,10 @@ var colors = require('colors'),
 //*************************************
 var cmdStr = 'cva_create folder app_id app_name [platform list]';
 var debug = false;
+var default_platforms_ios = ['android', 'firefoxos', 'ios'];
+var default_platforms_win = ['android', 'firefoxos', 'wp8'];
 var helpFile = 'cordova-create-help.txt';
+var plugin_list = ['org.apache.cordova.console', 'org.apache.cordova.dialogs', 'org.apache.cordova.device'];
 var theStars = '********************';
 var space = ' ';
 
@@ -38,19 +49,21 @@ function showHelp() {
   console.log(raw.help);
 }
 
+//========================================================================
 //Write out what we're running
+//========================================================================
 console.log("\n%s".info, theStars);
 console.log("Cordova Create".info);
 console.log(theStars.info);
 
-//=================================================================
-//First lets sort out the command line arguments
-//=================================================================
+//========================================================================
+//Sort out the command line arguments
+//========================================================================
 var userArgs;
-//Is the first item 'node'?
+//Is the first item 'node'? then we're testing
 if (process.argv[0].toLowerCase() == 'node') {
   //whack the first two items off of the list of arguments
-  //This removes the node entry as well as the cva-create entry (the
+  //This removes the node entry as well as the cordova-create entry (the
   //program we're running)
   userArgs = process.argv.slice(2);
 } else {
@@ -58,7 +71,7 @@ if (process.argv[0].toLowerCase() == 'node') {
   //This removes just the cva-create entry
   userArgs = process.argv.slice(1);
 }
-//What's left at this point is just the command and any associated paramaters
+//What's left at this point is just all of the parameters
 if (debug) {
   listArray('Arguments', userArgs);
 }
@@ -72,7 +85,7 @@ if (userArgs.length > 2) {
   var appName = userArgs[2];
   //now whack off the initial (first three) arguments
   var userArgs = userArgs.slice(3);
-
+  //What's left is any target platforms (if we have any)
   var targetPlatforms = [];
   //Do we have any platforms on the command line?
   if (userArgs.length > 0) {
@@ -80,55 +93,63 @@ if (userArgs.length > 2) {
     targetPlatforms = userArgs;
   } else {
     //just use the default platforms
-    var osType = os.type();
-    var isWindows = osType.indexOf('Win') === 0;
-    if (isWindows) {
+    if (os.type().indexOf('Win') === 0) {
       //Set the default target list for Windows
-      targetPlatforms = ['android', 'firefoxos', 'wp8'];
+      targetPlatforms = default_platforms_win;
     } else {
       //OS X I'm assuming
-      targetPlatforms = ['android', 'firefoxos', 'ios'];
+      targetPlatforms = default_platforms_ios;
     }
   }
 
 } else {
   console.error("\nMissing one or more parameters, the proper command format is: ".error);
   console.error("\n  %s".error, cmdStr);
-  process.exit(code = 1);
+  process.exit(1);
 }
 
+//========================================================================
 //Check to make sure that the target folder does not already exist
+//========================================================================
 if (fs.existsSync(targetFolder)) {
   console.error("\nTarget folder %s already exists".error, targetFolder);
-  process.exit(code = 1);
+  process.exit(1);
 }
 
+//========================================================================
 //Tell the user what we're about to do
+//========================================================================
 console.log("\nApplication Name: %s", appName);
 console.log("Application ID: %s", appID);
 console.log("Target folder: %s", targetFolder);
 console.log("Target platforms: %s\n", targetPlatforms.join(' '));
 
-//process.exit(code = 0);
-
+//========================================================================
 //create the Cordova project
+//========================================================================
 console.log("Creating project".warn);
 shelljs.exec('cordova create ' + targetFolder + ' ' + appID + ' "' + appName + '"');
 
-//Then to the target folder directory
+//========================================================================
+//Change to the target folder directory
+//========================================================================
 console.log("\nChanging to target folder %s".warn, targetFolder);
 shelljs.pushd(targetFolder);
 
+//========================================================================
+// Platforms
+//========================================================================
 console.log('\nAdding platforms [%s] to the project'.warn, targetPlatforms);
 shelljs.exec('cordova platform add ' + targetPlatforms.join(' '));
 
-// use plugin id
+//========================================================================
+// Plugins
+//========================================================================
+// Loop through plugins array rather than hard-coding this list
 console.log("\nAdding Cordova Core Plugins".info);
-console.log("\nAdding console plugin to project".warn);
-shelljs.exec('cordova plugin add org.apache.cordova.console');
-console.log("\nAdding dialogs plugin to project".warn);
-shelljs.exec('cordova plugin add org.apache.cordova.dialogs');
-console.log("\nAdding device plugin to project".warn);
-shelljs.exec('cordova plugin add org.apache.cordova.device');
+plugin_list.forEach(function (plugin) {
+  console.log("\nAdding %s plugin to project".warn, plugin);
+  shelljs.exec('cordova plugin add ' + plugin);
+});
 
 console.log("\nAll done!\n");
