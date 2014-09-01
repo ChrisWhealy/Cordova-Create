@@ -8,10 +8,10 @@
 //
 // by John M. Wargo (www.johnwargo.com)
 //========================================================================
-var colors = require('colors'),
+var appConfig = require('./app_config.js'),
+  colors = require('colors'),
   fs = require('fs'),
   path = require('path'),
-  os = require('os'),
   shelljs = require('shelljs');
 
 //*************************************
@@ -19,15 +19,12 @@ var colors = require('colors'),
 //*************************************
 var cmdStr = 'cva_create folder app_id app_name [platform list]';
 var debug = false;
-var default_platforms_ios = ['android', 'firefoxos', 'ios'];
-var default_platforms_win = ['android', 'firefoxos', 'wp8'];
 var helpFile = 'cordova-create-help.txt';
-var plugin_list = ['org.apache.cordova.console', 'org.apache.cordova.dialogs', 'org.apache.cordova.device'];
-var theStars = '********************';
+var plugin_list;
+var theStars = "***************************************";
 var space = ' ';
 
 colors.setTheme({
-  verbose: 'cyan',
   info: 'grey',
   help: 'green',
   warn: 'yellow',
@@ -44,10 +41,42 @@ function listArray(theName, theArray) {
 }
 
 function showHelp() {
-  //Show the help page
+  //read the help file
   var raw = fs.readFileSync(path.join(__dirname, helpFile)).toString('utf8');
+  //write the contents of the help file to the console
   console.log(raw.help);
 }
+
+function executeCordovaCommand(commandStr) {
+  //Build the base command
+  var theCmd = 'cordova ';
+  //do we want to enable debug mode?
+  if (theConfig.enableDebug) {
+    //Then append the -d to the cordova command
+    console.log("Enabling debug mode");
+    theCmd += '-d ';
+  }
+  //Now add the rest of the command to the string
+  theCmd += commandStr;
+  console.log('Command string: %s', theCmd);
+  var resCode = shelljs.exec(theCmd).code;
+  if (resCode !== 0) {
+    console.error("Unable to execute command (error code: %s)".error, resCode);
+    process.exit(1);
+  }
+}
+
+//========================================================================
+//Write out what we're running
+//========================================================================
+console.log("\n%s".help, theStars);
+console.log("Cordova Create".help);
+console.log(theStars.help);
+
+//Get the app's configuration settingds
+var theConfig = appConfig();
+//Write them to the log while we're testing this thing...
+//console.log('App Config: %s'.error, JSON.stringify(theConfig));
 
 //========================================================================
 //Sort out the command line arguments
@@ -85,16 +114,8 @@ if (userArgs.length > 2) {
     //Then use them
     targetPlatforms = userArgs;
   } else {
-    //just use the default platforms
-    if (os.type().indexOf('Win') === 0) {
-      //Set the default target list for Windows
-      targetPlatforms = default_platforms_win;
-    } else {
-      //OS X I'm assuming
-      targetPlatforms = default_platforms_ios;
-    }
+    targetPlatforms = theConfig.platformList;
   }
-
 } else {
   console.error("\nMissing one or more parameters, the proper command format is: ".error);
   console.error("\n  %s".error, cmdStr);
@@ -111,46 +132,51 @@ if (fs.existsSync(targetFolder)) {
 }
 
 //========================================================================
-//Write out what we're running
+//Read the plugin list from the config
 //========================================================================
-console.log("\n%s".info, theStars);
-console.log("Cordova Create".info);
-console.log(theStars.info);
+plugin_list = theConfig.pluginList;
 
 //========================================================================
 //Tell the user what we're about to do
 //========================================================================
-console.log("\nApplication Name: %s", appName);
+console.log("Application Name: %s", appName);
 console.log("Application ID: %s", appID);
 console.log("Target folder: %s", targetFolder);
-console.log("Target platforms: %s\n", targetPlatforms.join(' '));
+console.log("Target platforms: %s", targetPlatforms.join(', '));
+console.log('Plugins: %s', plugin_list.join(', '));
 
 //========================================================================
 //create the Cordova project
 //========================================================================
-console.log("Creating project".warn);
-shelljs.exec('cordova create ' + targetFolder + ' ' + appID + ' "' + appName + '"');
+console.log("\nCreating project".warn);
+console.log(theStars);
+executeCordovaCommand('create ' + targetFolder + ' ' + appID + ' "' + appName + '"');
 
 //========================================================================
 //Change to the target folder directory
 //========================================================================
-console.log("\nChanging to target folder %s".warn, targetFolder);
+console.log("\nChanging to project folder (%s)".warn, targetFolder);
+console.log(theStars);
+//TODO: Should I do some error checking here?
 shelljs.pushd(targetFolder);
 
 //========================================================================
 // Platforms
 //========================================================================
-console.log('\nAdding platforms [%s] to the project'.warn, targetPlatforms);
-shelljs.exec('cordova platform add ' + targetPlatforms.join(' '));
+console.log('\nAdding platforms [%s] to the project'.warn, targetPlatforms.join(', '));
+console.log(theStars);
+executeCordovaCommand('platform add ' + targetPlatforms.join(' '));
 
 //========================================================================
 // Plugins
 //========================================================================
 // Loop through plugins array rather than hard-coding this list
-console.log("\nAdding Cordova Core Plugins".info);
+console.log("\nAdding Cordova Core Plugins".warn);
+console.log(theStars);
+//console.log('Plugins: %s', plugin_list.join(', '));
 plugin_list.forEach(function (plugin) {
-  console.log("\nAdding %s plugin to project".warn, plugin);
-  shelljs.exec('cordova plugin add ' + plugin);
+  console.log("Adding %s plugin to project".info, plugin);
+  executeCordovaCommand('plugin add ' + plugin);
 });
 
 //========================================================================
