@@ -80,4 +80,4 @@ The enableDebug parameter causes the module to add the debug (-d) parameter to t
 Many people enable the option by default for all cordova commands, but this really doesn't make sense since, in a properly configured Cordova development environment, stuff just works. Don't succumb, only enable this option when it's really useful or needed. 
 
 * * *
-&copy; 2014 [John M. Wargo](http://www.johnwargo.com) - Please buy [one of my books](hhtp://www.johnwargobooks.com) if you like and/or use this.
+&copy; 2014 [John M. Wargo](http://www.johnwargo.com) - Please buy [one of my books](http://www.johnwargobooks.com) if you like and/or use this.
