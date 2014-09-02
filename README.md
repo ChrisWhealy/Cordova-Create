@@ -95,7 +95,6 @@ If you do not specify a platform list on the command line, the set of default pl
 
 Customization
 ======================
->>>>>>> origin/master
 When the command runs for the first time, it creates a configuration file that can be used to customize the tasks the command performs when it runs. The configuration file is called 'cordova-create.json' and it can be located in the user's home folder. On Windows you can find the file in the c:\users\user_name folder (replacing user_name with the login name for the current user). On Macintosh OS X, the file is located in the user's home folder at /Users/user_name (again replacing user_name with the user's logon name).
 
 The default options for the application are defined in the following JSON object stored in the configuration file:
