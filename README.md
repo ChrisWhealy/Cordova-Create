@@ -39,17 +39,17 @@ Usage
 ===========
 To create a new project using this command, open a terminal window and navigate to the folder where you want the project created and issue the following command:
 
-	cordova_create folder app_id app_name [platform list]
+	cordova-create folder app_id app_name [platform list]
 
 The first three parameters are the same parameters you would use with the Cordova create command. The platform list, shown as an optional parameter (by the use of brackets), defines the list of target platforms you want to use for the application project.
 
 To create a sample Android project called Hello2 in a folder called hello_2 you would use the following command:
 
-	cordova_create hello_2 com.johnwargo.hello2 Hello2 android
+	cordova-create hello_2 com.johnwargo.hello2 Hello2 android
 
 To create the same project, but include an iOS project as well, you would use the following command:
 
-	cordova_create hello_2 com.johnwargo.hello2 Hello2 android ios
+	cordova-create hello_2 com.johnwargo.hello2 Hello2 android ios
 
 If you do not specify a platform list on the command line, the set of default platforms for your current operating system (described below) will be used. 
 
