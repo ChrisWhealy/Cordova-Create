@@ -6,7 +6,6 @@ If you create an occasional Cordova application, this probably won't be that use
 
 The module is customizable; when you run the command the first time, it creates a configuration file that you can easily modify to customize how the module works for you. Through the configuration file, you can specify the platforms and plugins that are added to the project created using the command. You can even enable debug mode, which causes the module to execute the cordova command with it's debug (-d) command line option. All of the customization capabilities will be described later.
 
-
 Requirements
 ============
 This module expects that you have a functional Apache Cordova development environment running. This includes the appropriate native SDKs (Android Development Tools, Xcode and so on), NodeJS and other associated tools. As the command is a node module, it relies upon the same technology as the Cordova CLI does. 
