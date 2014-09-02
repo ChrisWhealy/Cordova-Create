@@ -56,6 +56,47 @@ If you do not specify a platform list on the command line, the set of default pl
 
 Customization
 ======================
+=======
+Windows:
+
+	npm install -g cordova-create
+
+Macintosh OS X:
+
+	sudo npm install -g cordova-create
+
+
+If you've downloaded this module's code from GitHub, you can install the module by extracting the files then opening a terminal window and navigating to the folder where this file is located and issuing the following command:
+
+Windows:
+
+	npm install -g
+
+Macintosh OS X:
+
+	sudo npm install -g
+
+Usage
+===========
+To create a new project using this command, open a terminal window and navigate to the folder where you want the project created and issue the following command:
+
+	cordova-create folder app_id app_name [platform list]
+
+The first three parameters are the same parameters you would use with the Cordova create command. The platform list, shown as an optional parameter (by the use of brackets), defines the list of target platforms you want to use for the application project.
+
+To create a sample Android project called Hello2 in a folder called hello_2 you would use the following command:
+
+	cordova-create hello_2 com.johnwargo.hello2 Hello2 android
+
+To create the same project, but include an iOS project as well, you would use the following command:
+
+	cordova-create hello_2 com.johnwargo.hello2 Hello2 android ios
+
+If you do not specify a platform list on the command line, the set of default platforms for your current operating system (described below) will be used. 
+
+Customization
+======================
+>>>>>>> origin/master
 When the command runs for the first time, it creates a configuration file that can be used to customize the tasks the command performs when it runs. The configuration file is called 'cordova-create.json' and it can be located in the user's home folder. On Windows you can find the file in the c:\users\user_name folder (replacing user_name with the login name for the current user). On Macintosh OS X, the file is located in the user's home folder at /Users/user_name (again replacing user_name with the user's logon name).
 
 The default options for the application are defined in the following JSON object stored in the configuration file:
