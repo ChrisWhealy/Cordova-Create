@@ -62,7 +62,8 @@ The default options for the application are defined in the following JSON object
     {
       "platformList": [ "android", "firefoxos", "ios" ],
       "pluginList": [ "org.apache.cordova.console", "org.apache.cordova.dialogs", "org.apache.cordova.device" ],
-      "enableDebug": false
+      "enableDebug": false,
+	  "copyFrom": ""
     }
 
 To change the module's configuration, edit the JSON object, providing your own values for the configuration options described by the object. 
@@ -75,6 +76,8 @@ The default list of target platforms will differ depending on what operating sys
 You can add third party plugins to the pluginlist. This should work as long as the Cordova CLI can load the plugins using the plugin's ID. Where this won't work is for locally installed plugins. If you want to use locally installed plugins, you will need to set a plugin search path during the call to the cordova create command. 
 
 The enableDebug parameter causes the module to add the debug (-d) parameter to the cordova CLI command . With this option set to true, additional information will be written to the console as the Cordova CLI commands are executed. You will want to enable this option if something isn't working with the command and you want more information about what's happening as the different commands are executed. 
+
+The copyFrom property allows you to specify the folder path that is used for the source for the web application content for the created application. When a non-blank value is provided here, the Cordova create command is enhanced by adding a '--copy-from "file_path"' to the end of the command.
 
 Many people enable the option by default for all cordova commands, but this really doesn't make sense since, in a properly configured Cordova development environment, stuff just works. Don't succumb, only enable this option when it's really useful or needed. 
 

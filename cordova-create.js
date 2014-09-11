@@ -152,11 +152,17 @@ console.log("\nCreating project".warn);
 console.log(theStars);
 var cmdStr = 'create ' + targetFolder + ' ' + appID + ' "' + appName + '"';
 var copyFromPath = theConfig.copyFrom;
+//Do we have a copyFromPath property?
+if (copyFromPath === undefined) {
+  //If no, blank it out
+  copyFromPath = '';
+}
 //Do we have a copyFrom path?
 if (copyFromPath.length > 0) {
-  console.log('Enabling --copy-from option (%s)', copyFromPath);
+  //Then add it to the end of the create command
+  console.log('Enabling --copy-from option (file path: %s)', copyFromPath);
   //Then add it to the command string we're executing
-  cmdStr = +'--copy-from "' + copyFromPath + '"';
+  cmdStr += ' --copy-from "' + copyFromPath + '"';
 }
 executeCordovaCommand(cmdStr);
 
