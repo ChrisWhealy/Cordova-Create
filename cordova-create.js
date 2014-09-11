@@ -150,7 +150,15 @@ console.log('Plugins: %s', plugin_list.join(', '));
 //========================================================================
 console.log("\nCreating project".warn);
 console.log(theStars);
-executeCordovaCommand('create ' + targetFolder + ' ' + appID + ' "' + appName + '"');
+var cmdStr = 'create ' + targetFolder + ' ' + appID + ' "' + appName + '"';
+var copyFromPath = theConfig.copyFrom;
+//Do we have a copyFrom path?
+if (copyFromPath.length > 0) {
+  console.log('Enabling --copy-from option (%s)', copyFromPath);
+  //Then add it to the command string we're executing
+  cmdStr = +'--copy-from "' + copyFromPath + '"';
+}
+executeCordovaCommand(cmdStr);
 
 //========================================================================
 //Change to the target folder directory

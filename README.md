@@ -78,5 +78,9 @@ The enableDebug parameter causes the module to add the debug (-d) parameter to t
 
 Many people enable the option by default for all cordova commands, but this really doesn't make sense since, in a properly configured Cordova development environment, stuff just works. Don't succumb, only enable this option when it's really useful or needed. 
 
+Known Limitations
+=================
+I wasn't able to get exec to operate synchronously, so at the very end of the script, when it's launching the .ics file, you may see the All Done message before any shell errors appear. It looks like a future version of Node will be adding synchronous exec, so I'll 'fix' this then.
+
 * * *
 By [John M. Wargo](http://www.johnwargo.com) - if you like and/or use this module, why not pick up [one of my books](http://www.johnwargobooks.com)?

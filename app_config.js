@@ -73,6 +73,13 @@ function checkConfig(theConfig) {
     configChanged = true;
   }
 
+  //Add support for the --copy-from switch
+  if (theConfig.enableDebug === undefined) {
+    doLog("Adding copy-from to config");
+    theConfig.copyFrom = '';
+    configChanged = true;
+  }
+
   // Did we make any changes to the config?
   if (configChanged) {
     doLog("Writing configuation file");
