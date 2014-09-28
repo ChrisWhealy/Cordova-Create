@@ -26,6 +26,7 @@ colors.setTheme({
 //Some values we need to execute
 var theOS = os.type();
 var isWindows = (theOS.indexOf('Win') === 0);
+var isLinux = (theOS.indexOf('Linux') === 0);
 
 function doLog(msgText) {
   if (debugMode) {
@@ -36,7 +37,9 @@ function doLog(msgText) {
 // Validate the contents of the config file
 //========================================================================
 function checkConfig(theConfig) {
+
   //Some default values
+  var default_platforms_linux = ['firefoxos', 'ubuntu'];
   var default_platforms_osx = ['android', 'firefoxos', 'ios'];
   var default_platforms_win = ['android', 'firefoxos', 'wp8'];
   var default_plugin_list = ['org.apache.cordova.console', 'org.apache.cordova.dialogs', 'org.apache.cordova.device'];
@@ -49,10 +52,20 @@ function checkConfig(theConfig) {
   //First check the platform list
   if (theConfig.platformList === undefined) {
     configChanged = true;
-    doLog("Adding default platform list to config");
+    //Set a default platform list in case this runs on some other platform
+    //not likely, but possible.
+    theConfig.platformList = [];
     if (isWindows) {
+      //Set defaults for Windows
+      doLog("Setting Windows default platform list");
       theConfig.platformList = default_platforms_win;
+    } else if (isLinux) {
+      //Set defaults for Linux
+      doLog("Setting Linux default platform list");
+      theConfig.platformList = default_platforms_linux;
     } else {
+      //when all else fails, pick OS X
+      doLog("Setting Macintosh default platform list");
       theConfig.platformList = default_platforms_osx;
     }
   }
@@ -82,7 +95,7 @@ function checkConfig(theConfig) {
 
   // Did we make any changes to the config?
   if (configChanged) {
-    doLog("Writing configuation file");
+    doLog("Writing configuration file");
     try {
       doLog("Writing configuration to " + config_path);
       fs.writeFileSync(config_path, JSON.stringify(theConfig, null, 4));

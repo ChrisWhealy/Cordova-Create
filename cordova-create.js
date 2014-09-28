@@ -179,19 +179,30 @@ shelljs.pushd(targetFolder);
 //========================================================================
 console.log('\nAdding platforms [%s] to the project'.warn, targetPlatforms.join(', '));
 console.log(theStars);
-executeCordovaCommand('platform add ' + targetPlatforms.join(' '));
+if (targetPlatforms.length > 0) {
+  executeCordovaCommand('platform add ' + targetPlatforms.join(' '));
+} else {
+  //I guess we're not adding any platforms
+  //warn, but don't fail
+  console.log("No platforms specified, skipping".warn);
+}
 
 //========================================================================
 // Plugins
 //========================================================================
-// Loop through plugins array rather than hard-coding this list
 console.log("\nAdding Cordova Core Plugins".warn);
 console.log(theStars);
-//console.log('Plugins: %s', plugin_list.join(', '));
-plugin_list.forEach(function (plugin) {
-  console.log("Adding %s plugin to project".info, plugin);
-  executeCordovaCommand('plugin add ' + plugin);
-});
+if (plugin_list.length > 0) {
+  // Loop through plugins array rather than hard-coding this list
+  plugin_list.forEach(function (plugin) {
+    console.log("Adding %s plugin to project".info, plugin);
+    executeCordovaCommand('plugin add ' + plugin);
+  });
+} else {
+  //I guess we're not adding any plugins
+  //warn, but don't fail
+  console.log("No plugins specified in the configuration file, skipping...".warn);
+}
 
 //========================================================================
 // Finished
