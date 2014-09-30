@@ -43,8 +43,9 @@ function listArray(theName, theArray) {
 function showHelp() {
   //read the help file
   var raw = fs.readFileSync(path.join(__dirname, helpFile)).toString('utf8');
+  //20140930 - Removed coloring of help file output
   //write the contents of the help file to the console
-  console.log(raw.help);
+  console.log(raw);
 }
 
 function executeCordovaCommand(commandStr) {
@@ -117,9 +118,14 @@ if (userArgs.length > 2) {
     targetPlatforms = theConfig.platformList;
   }
 } else {
+  //20140930 - Clean up the error output
+  //Tell the user why we can't do anything
   console.error("\nMissing one or more parameters, the proper command format is: ".error);
-  console.error("\n  %s".error, cmdStr);
+  //Show them the offending command line
+  console.error("\n  %s\n".error, cmdStr);
+  //Then display the help file
   showHelp();
+  //We're done, so exit the app
   process.exit(1);
 }
 

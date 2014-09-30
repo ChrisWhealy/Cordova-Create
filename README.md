@@ -10,6 +10,8 @@ Requirements
 ============
 This module expects that you have a functional Apache Cordova development environment running. This includes the appropriate native SDKs (Android Development Tools, Xcode and so on), NodeJS and other associated tools. As the command is a node module, it relies upon the same technology as the Cordova CLI does. 
 
+This module has been tested on Windows, Macintosh OS X and Ubuntu Linux.
+
 An excellent resource for information on how to setup a Cordova development environment is my [Apache Cordova 3 Programming](http://www.cordovaprogramming.com) book.
 
 Installation
@@ -20,7 +22,7 @@ Windows:
 
 	npm install -g cordova-create
 
-Macintosh OS X:
+Macintosh OS X and Linux:
 
 	sudo npm install -g cordova-create
 
@@ -31,7 +33,7 @@ Windows:
 
 	npm install -g
 
-Macintosh OS X:
+Macintosh OS X and Linux:
 
 	sudo npm install -g
 
