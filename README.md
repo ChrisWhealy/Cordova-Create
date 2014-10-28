@@ -74,9 +74,10 @@ To change the module's configuration, edit the JSON object, providing your own v
 
 The default list of target platforms will differ depending on what operating system you are using. If you look at the script's code, you will see the following default platforms lists:
 
-	var default_platforms_osx = ['android', 'firefoxos', 'ios'];
-	var default_platforms_win = ['android', 'firefoxos', 'wp8'];
-
+  	var default_platforms_linux = ['ubuntu'];
+  	var default_platforms_osx = ['android', 'ios'];
+  	var default_platforms_win = ['android', 'windows'];
+	
 You can add third party plugins to the pluginlist. This should work as long as the Cordova CLI can load the plugins using the plugin's ID. Where this won't work is for locally installed plugins. If you want to use locally installed plugins, you will need to set a plugin search path during the call to the `cordova create` command. 
 
 The enableDebug parameter causes the module to add the debug (-d) parameter to all `cordova` CLI commands. With this option set to true, additional information will be written to the console as the Cordova CLI commands are executed. You will want to enable this option if something isn't working with the command and you want more information about what's happening as the different commands are executed. 
