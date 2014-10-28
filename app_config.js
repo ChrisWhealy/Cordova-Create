@@ -7,7 +7,7 @@ var colors = require('colors'),
   path = require('path'),
   os = require('os');
 
-
+var blankStr = '';
 //Set the following to true to write status
 //to the console as it runs
 var debugMode = false;
@@ -33,22 +33,25 @@ function doLog(msgText) {
     console.log(msgText);
   }
 }
+
 //========================================================================
 // Validate the contents of the config file
 //========================================================================
 function checkConfig(theConfig) {
 
-  //Some default values
-  var default_platforms_linux = ['firefoxos', 'ubuntu'];
-  var default_platforms_osx = ['android', 'firefoxos', 'ios'];
-  var default_platforms_win = ['android', 'firefoxos', 'wp8'];
-  var default_plugin_list = ['org.apache.cordova.console', 'org.apache.cordova.dialogs', 'org.apache.cordova.device'];
-
-  doLog("Validing configuration");
   //Track whether the config file has been changed
   var configChanged = false;
+
+  //Some default values
+  var default_platforms_linux = ['ubuntu'];
+  var default_platforms_osx = ['android', 'ios'];
+  var default_platforms_win = ['android', 'windows'];
+  var default_plugin_list = ['org.apache.cordova.console', 'org.apache.cordova.dialogs', 'org.apache.cordova.device'];
+
   //Are all of the properties we need there?
   //populate them with the ones we need
+  console.log("Validing configuration");
+
   //First check the platform list
   if (theConfig.platformList === undefined) {
     configChanged = true;
@@ -57,15 +60,15 @@ function checkConfig(theConfig) {
     theConfig.platformList = [];
     if (isWindows) {
       //Set defaults for Windows
-      doLog("Setting Windows default platform list");
+      console.log("Setting Windows default platform list");
       theConfig.platformList = default_platforms_win;
     } else if (isLinux) {
       //Set defaults for Linux
-      doLog("Setting Linux default platform list");
+      console.log("Setting Linux default platform list");
       theConfig.platformList = default_platforms_linux;
     } else {
       //when all else fails, pick OS X
-      doLog("Setting Macintosh default platform list");
+      console.log("Setting Macintosh default platform list");
       theConfig.platformList = default_platforms_osx;
     }
   }
@@ -81,27 +84,46 @@ function checkConfig(theConfig) {
   //on the command line to the cordova command
   if (theConfig.enableDebug === undefined) {
     doLog("Adding debug mode to config");
-    //Add the value to the config
     theConfig.enableDebug = false;
     configChanged = true;
   }
 
   //Add support for the --copy-from switch
+  //Note: can't have both copyTo and linkTo
   if (theConfig.copyFrom === undefined) {
     doLog("Adding copy-from to config");
-    theConfig.copyFrom = '';
+    theConfig.copyFrom = blankStr;
+    configChanged = true;
+  }
+
+  //linkTo: Added 10/26/2014
+  //Add support for the --linkto switch when creating new projects
+  //Note: can't have both copyTo and linkTo
+  if (theConfig.linkTo === undefined) {
+    doLog("Adding copy-from to config");
+    theConfig.linkTo = blankStr;
+    configChanged = true;
+  }
+
+  //createParms: Added 10/26/2014
+  //Used to pass additional commands to the create command
+  //specifically added to support passing a searchPath string when
+  //creating a new project
+  if (theConfig.createParms === undefined) {
+    doLog("Adding createParms to config");
+    theConfig.createParms = blankStr;
     configChanged = true;
   }
 
   // Did we make any changes to the config?
   if (configChanged) {
-    doLog("Writing configuration file");
+    console.log("Writing configuration file");
     try {
-      doLog("Writing configuration to " + config_path);
+      console.log("Writing configuration to " + config_path);
       fs.writeFileSync(config_path, JSON.stringify(theConfig, null, 4));
       //if on Linux variant...set the file permissions
       if (!isWindows) {
-        doLog("Setting file permissions");
+        console.log("Setting file permissions");
         try {
           fs.chmodSync(config_path, 0777);
         } catch (err) {
@@ -129,26 +151,26 @@ var Config = function () {
   var config_file = "cordova-create.json";
 
   //Write some stuff to the screen
-  doLog("\n" + stars);
-  doLog("Getting configuration");
+  //console.log("\n" + stars);
+  console.log("Getting configuration");
   //----------------------------------------------------------------------
   //Determine the user's home folder, varies per OS.
   //----------------------------------------------------------------------
   var theEnv = process.env;
   if (isWindows) {
-    doLog("Running on Windows");
+    console.log("Running on Windows");
     //Set the default home folder for Windows
     config_path = theEnv.USERPROFILE;
   } else {
-    doLog("Runnning on a Linux variant");
+    console.log("Runnning on a Linux variant");
     //Home folder for OS X and Linux
     config_path = theEnv.HOME;
   }
   //Do we have a value?
   if (config_path.length > 0) {
-    doLog('Home folder: ' + config_path);
+    console.log('Home folder: ' + config_path);
     config_path = path.join(config_path, config_file);
-    doLog('Configuration file: ' + config_path);
+    console.log('Configuration file: ' + config_path);
   } else {
     console.error("Unable to determine home folder".error);
     process.exit(1);
@@ -159,16 +181,15 @@ var Config = function () {
   //--------------------------------------------------------------------
   if (fs.existsSync(config_path)) {
     //Read the file
-    doLog("Reading configuation file");
+    console.log("Reading configuation file");
     var theData = fs.readFileSync(config_path, 'utf8');
     //Make sure the config has all of the options it should
     theConfig = checkConfig(JSON.parse(theData));
   } else {
     //Don't have a config file, so lets create one
-    doLog("Creating configuration file");
+    console.log("Creating configuration file");
     theConfig = checkConfig({});
   }
-  doLog(stars);
   //Return the app's config to the calling program
   return theConfig;
 };

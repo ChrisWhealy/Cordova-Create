@@ -17,10 +17,12 @@ var appConfig = require('./app_config.js'),
 //*************************************
 //some constants
 //*************************************
+var commaSpace = ', ';
 var cmdStr = 'cva_create folder app_id app_name [platform list]';
 var debug = false;
 var helpFile = 'cordova-create-help.txt';
 var plugin_list;
+var quoteMark = '"';
 var theStars = "***************************************";
 var space = ' ';
 
@@ -145,30 +147,51 @@ plugin_list = theConfig.pluginList;
 //========================================================================
 //Tell the user what we're about to do
 //========================================================================
+console.log("\n" + theStars);
 console.log("Application Name: %s", appName);
 console.log("Application ID: %s", appID);
 console.log("Target folder: %s", targetFolder);
-console.log("Target platforms: %s", targetPlatforms.join(', '));
-console.log('Plugins: %s', plugin_list.join(', '));
+console.log("Target platforms: %s", targetPlatforms.join(commaSpace));
+console.log('Plugins: %s', plugin_list.join(commaSpace));
+console.log(theStars);
 
 //========================================================================
 //create the Cordova project
 //========================================================================
 console.log("\nCreating project".warn);
 console.log(theStars);
-var cmdStr = 'create ' + targetFolder + ' ' + appID + ' "' + appName + '"';
+var cmdStr = 'create ' + targetFolder + space + appID + space + quoteMark + appName + quoteMark;
 var copyFromPath = theConfig.copyFrom;
 //Do we have a copyFromPath property?
-if (copyFromPath === undefined) {
-  //If no, blank it out
-  copyFromPath = '';
-}
+//if (copyFromPath === undefined) {
+//  //If no, blank it out
+//  copyFromPath = '';
+//}
 //Do we have a copyFrom path?
 if (copyFromPath.length > 0) {
   //Then add it to the end of the create command
   console.log('Enabling --copy-from option (file path: %s)', copyFromPath);
   //Then add it to the command string we're executing
-  cmdStr += ' --copy-from "' + copyFromPath + '"';
+  cmdStr += ' --copy-from "' + copyFromPath + quoteMark;
+} else {
+  //20141026 - add support for link-to option
+  //Only do the linkTo option if copyTo is blank
+  //can't have both
+  var linkToPath = theConfig.linkTo;
+  if (linkToPath.length > 0) {
+    //Then add it to the end of the create command
+    console.log('Enabling --link-to option (file path: %s)', linkToPath);
+    //Then add it to the command string we're executing
+    cmdStr += ' --link-to "' + linkToPath + quoteMark;
+  }
+}
+
+//Pass any additional create command paramaters that exist in the
+//config file
+var createParms = theConfig.createParms;
+if (createParms.length > 0) {
+  console.log('Appending "%s" to the create command', createParms);
+  cmdStr += " " + createParms;
 }
 executeCordovaCommand(cmdStr);
 
@@ -177,16 +200,15 @@ executeCordovaCommand(cmdStr);
 //========================================================================
 console.log("\nChanging to project folder (%s)".warn, targetFolder);
 console.log(theStars);
-//TODO: Should I do some error checking here?
 shelljs.pushd(targetFolder);
 
 //========================================================================
 // Platforms
 //========================================================================
-console.log('\nAdding platforms [%s] to the project'.warn, targetPlatforms.join(', '));
+console.log('\nAdding platforms [%s] to the project'.warn, targetPlatforms.join(commaSpace));
 console.log(theStars);
 if (targetPlatforms.length > 0) {
-  executeCordovaCommand('platform add ' + targetPlatforms.join(' '));
+  executeCordovaCommand('platform add ' + targetPlatforms.join(space));
 } else {
   //I guess we're not adding any platforms
   //warn, but don't fail
