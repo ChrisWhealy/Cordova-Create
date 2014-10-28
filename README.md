@@ -98,7 +98,7 @@ Many people enable the option by default for all cordova commands, but this real
 
 Update History
 ==============
-November 26, 2014
+November 28, 2014
 -----------------
 Added support for the Cordova CLI create command's --link-to switch.
 
