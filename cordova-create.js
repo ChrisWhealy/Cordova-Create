@@ -8,11 +8,12 @@
 //
 // by John M. Wargo (www.johnwargo.com)
 //========================================================================
-var appConfig = require('./app_config.js'),
-  colors = require('colors'),
-  fs = require('fs'),
-  path = require('path'),
-  shelljs = require('shelljs');
+var appConfig = require('./app_config.js');
+var colors = require('colors');
+var exec = require('child_process').exec;
+var fs = require('fs');
+var path = require('path');
+var shelljs = require('shelljs');
 
 //*************************************
 //some constants
@@ -69,17 +70,16 @@ function executeCordovaCommand(commandStr) {
   }
 }
 
+function createProject() {
+
+}
+
 //========================================================================
 //Write out what we're running
-//========================================================================
+//========================================================4================
 console.log("\n%s".help, theStars);
 console.log("Cordova Create".help);
 console.log(theStars.help);
-
-//Get the app's configuration settingds
-var theConfig = appConfig();
-//Write them to the log while we're testing this thing...
-//console.log('App Config: %s'.error, JSON.stringify(theConfig));
 
 //========================================================================
 //Sort out the command line arguments
@@ -101,7 +101,13 @@ if (debug) {
   listArray('Arguments', userArgs);
 }
 
+//Do we have the right # of parameters to continue?
 if (userArgs.length > 2) {
+  //Get the app's configuration settingds
+  var theConfig = appConfig.getConfig();
+  //Write them to the log while we're testing this thing...
+  //console.log('App Config: %s'.error, JSON.stringify(theConfig));
+
   //Grab the target folder
   var targetFolder = userArgs[0];
   //Get the app ID
@@ -119,120 +125,148 @@ if (userArgs.length > 2) {
   } else {
     targetPlatforms = theConfig.platformList;
   }
-} else {
-  //20140930 - Clean up the error output
-  //Tell the user why we can't do anything
-  console.error("\nMissing one or more parameters, the proper command format is: ".error);
-  //Show them the offending command line
-  console.error("\n  %s\n".error, cmdStr);
-  //Then display the help file
-  showHelp();
-  //We're done, so exit the app
-  process.exit(1);
-}
 
-//========================================================================
-//Check to make sure that the target folder does not already exist
-//========================================================================
-if (fs.existsSync(targetFolder)) {
-  console.error("\nTarget folder %s already exists".error, targetFolder);
-  process.exit(1);
-}
+  //========================================================================
+  //Check to make sure that the target folder does not already exist
+  //========================================================================
+  if (fs.existsSync(targetFolder)) {
+    console.error("\nTarget folder %s already exists".error, targetFolder);
+    process.exit(1);
+  }
 
-//========================================================================
-//Read the plugin list from the config
-//========================================================================
-plugin_list = theConfig.pluginList;
+  //========================================================================
+  //Read the plugin list from the config
+  //========================================================================
+  plugin_list = theConfig.pluginList;
 
-//========================================================================
-//Tell the user what we're about to do
-//========================================================================
-console.log("\n" + theStars);
-console.log("Application Name: %s", appName);
-console.log("Application ID: %s", appID);
-console.log("Target folder: %s", targetFolder);
-console.log("Target platforms: %s", targetPlatforms.join(commaSpace));
-console.log('Plugins: %s', plugin_list.join(commaSpace));
-console.log(theStars);
+  //========================================================================
+  //Tell the user what we're about to do
+  //========================================================================
+  console.log("\n" + theStars);
+  console.log("Application Name: %s", appName);
+  console.log("Application ID: %s", appID);
+  console.log("Target folder: %s", targetFolder);
+  console.log("Target platforms: %s", targetPlatforms.join(commaSpace));
+  console.log('Plugins: %s', plugin_list.join(commaSpace));
+  console.log(theStars);
 
-//========================================================================
-//create the Cordova project
-//========================================================================
-console.log("\nCreating project".warn);
-console.log(theStars);
-var cmdStr = 'create ' + targetFolder + space + appID + space + quoteMark + appName + quoteMark;
-var copyFromPath = theConfig.copyFrom;
-//Do we have a copyFromPath property?
-//if (copyFromPath === undefined) {
-//  //If no, blank it out
-//  copyFromPath = '';
-//}
-//Do we have a copyFrom path?
-if (copyFromPath.length > 0) {
-  //Then add it to the end of the create command
-  console.log('Enabling --copy-from option (file path: %s)', copyFromPath);
-  //Then add it to the command string we're executing
-  cmdStr += ' --copy-from "' + copyFromPath + quoteMark;
-} else {
-  //20141026 - add support for link-to option
-  //Only do the linkTo option if copyTo is blank
-  //can't have both
-  var linkToPath = theConfig.linkTo;
-  if (linkToPath.length > 0) {
+  //========================================================================
+  //create the Cordova project
+  //========================================================================
+  console.log("\nCreating project".warn);
+  console.log(theStars);
+  var cmdStr = 'create ' + targetFolder + space + appID + space + quoteMark + appName + quoteMark;
+  var copyFromPath = theConfig.copyFrom;
+  //Do we have a copyFromPath property?
+  //if (copyFromPath === undefined) {
+  //  //If no, blank it out
+  //  copyFromPath = '';
+  //}
+  //Do we have a copyFrom path?
+  if (copyFromPath.length > 0) {
     //Then add it to the end of the create command
-    console.log('Enabling --link-to option (file path: %s)', linkToPath);
+    console.log('Enabling --copy-from option (file path: %s)', copyFromPath);
     //Then add it to the command string we're executing
-    cmdStr += ' --link-to "' + linkToPath + quoteMark;
+    cmdStr += ' --copy-from "' + copyFromPath + quoteMark;
+  } else {
+    //20141026 - add support for link-to option
+    //Only do the linkTo option if copyTo is blank
+    //can't have both
+    var linkToPath = theConfig.linkTo;
+    if (linkToPath.length > 0) {
+      //Then add it to the end of the create command
+      console.log('Enabling --link-to option (file path: %s)', linkToPath);
+      //Then add it to the command string we're executing
+      cmdStr += ' --link-to "' + linkToPath + quoteMark;
+    }
+  }
+
+  //Pass any additional create command paramaters that exist in the
+  //config file
+  var createParms = theConfig.createParms;
+  if (createParms.length > 0) {
+    console.log('Appending "%s" to the create command', createParms);
+    cmdStr += " " + createParms;
+  }
+  executeCordovaCommand(cmdStr);
+
+  //========================================================================
+  //Change to the target folder directory
+  //========================================================================
+  console.log("\nChanging to project folder (%s)".warn, targetFolder);
+  console.log(theStars);
+  shelljs.pushd(targetFolder);
+
+  //========================================================================
+  // Platforms
+  //========================================================================
+  console.log('\nAdding platforms [%s] to the project'.warn, targetPlatforms.join(commaSpace));
+  console.log(theStars);
+  if (targetPlatforms.length > 0) {
+    executeCordovaCommand('platform add ' + targetPlatforms.join(space));
+  } else {
+    //I guess we're not adding any platforms
+    //warn, but don't fail
+    console.log("No platforms specified, skipping".warn);
+  }
+
+  //========================================================================
+  // Plugins
+  //========================================================================
+  console.log("\nAdding Cordova Core Plugins".warn);
+  console.log(theStars);
+  if (plugin_list.length > 0) {
+    // Loop through plugins array rather than hard-coding this list
+    plugin_list.forEach(function (plugin) {
+      console.log("Adding %s plugin to project".info, plugin);
+      executeCordovaCommand('plugin add ' + plugin);
+    });
+  } else {
+    //I guess we're not adding any plugins
+    //warn, but don't fail
+    console.log("No plugins specified in the configuration file, skipping...".warn);
+  }
+
+  //========================================================================
+  // Finished
+  //========================================================================
+  console.log("\nAll done!\n".help);
+
+} else {
+  //Do we have only one parameter and it's the word 'config'?
+  if (userArgs.length == 1 && userArgs[0].toLowerCase() == '/config') {
+    //Then open the config file for editing
+    //First get the config file name
+    var configFile = appConfig.getConfigFile();
+    //Tell the user we're launching it
+    console.log("Launching %s", configFile);
+    //Figure out what command will launch the file depending on the
+    //operating system
+    var cmdStr;
+    if (appConfig.isWindows()) {
+      cmdStr = "start " + configFile;
+    } else {
+      cmdStr = "open " + configFile;
+    }
+    //console.log("Launch command: '%s'", cmdStr);
+    var child;
+    child = exec(cmdStr, function (error, stdout, stderr) {
+      if (error !== null) {
+        console.log("\nexec error: %s\n".error, error);
+        process.exit(1);
+      }
+    });
+
+  } else {
+    //Otherwise, we don't know what to do, so toss out an error
+    //20140930 - Clean up the error output
+    //Tell the user why we can't do anything
+    console.error("\nMissing one or more parameters, the proper command format is: ".error);
+    //Show them the offending command line
+    console.error("\n  %s\n".error, cmdStr);
+    //Then display the help file
+    showHelp();
+    //We're done, so exit the app
+    process.exit(1);
   }
 }
-
-//Pass any additional create command paramaters that exist in the
-//config file
-var createParms = theConfig.createParms;
-if (createParms.length > 0) {
-  console.log('Appending "%s" to the create command', createParms);
-  cmdStr += " " + createParms;
-}
-executeCordovaCommand(cmdStr);
-
-//========================================================================
-//Change to the target folder directory
-//========================================================================
-console.log("\nChanging to project folder (%s)".warn, targetFolder);
-console.log(theStars);
-shelljs.pushd(targetFolder);
-
-//========================================================================
-// Platforms
-//========================================================================
-console.log('\nAdding platforms [%s] to the project'.warn, targetPlatforms.join(commaSpace));
-console.log(theStars);
-if (targetPlatforms.length > 0) {
-  executeCordovaCommand('platform add ' + targetPlatforms.join(space));
-} else {
-  //I guess we're not adding any platforms
-  //warn, but don't fail
-  console.log("No platforms specified, skipping".warn);
-}
-
-//========================================================================
-// Plugins
-//========================================================================
-console.log("\nAdding Cordova Core Plugins".warn);
-console.log(theStars);
-if (plugin_list.length > 0) {
-  // Loop through plugins array rather than hard-coding this list
-  plugin_list.forEach(function (plugin) {
-    console.log("Adding %s plugin to project".info, plugin);
-    executeCordovaCommand('plugin add ' + plugin);
-  });
-} else {
-  //I guess we're not adding any plugins
-  //warn, but don't fail
-  console.log("No plugins specified in the configuration file, skipping...".warn);
-}
-
-//========================================================================
-// Finished
-//========================================================================
-console.log("\nAll done!\n".help);

@@ -53,7 +53,11 @@ To create the same project, but include an iOS project as well, you would use th
 
 	cordova-create hello_2 com.johnwargo.hello2 Hello2 android ios
 
-If you do not specify a platform list on the command line, the set of default platforms for your current operating system (described below) will be used. 
+If you do not specify a platform list on the command line, the set of default platforms for your current operating system (described below) will be used.
+
+To launch the system's default editor to edit the application's configuration file (described in the next section), use the following command:
+
+	cordova-create /config 
 
 Customization
 ======================
@@ -98,7 +102,11 @@ Many people enable the option by default for all cordova commands, but this real
 
 Update History
 ==============
-November 28, 2014
+November 5, 2014
+----------------
+Added /config command-line option. Opens the application's configuration file in the system's default editor.  
+
+October 28, 2014
 -----------------
 Added support for the Cordova CLI create command's --link-to switch.
 

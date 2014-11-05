@@ -8,6 +8,7 @@ var colors = require('colors'),
   os = require('os');
 
 var blankStr = '';
+
 //Set the following to true to write status
 //to the console as it runs
 var debugMode = false;
@@ -143,19 +144,22 @@ function checkConfig(theConfig) {
 }
 
 //========================================================================
-// The config object
+// isWindowsPlatform()
 //========================================================================
-var Config = function () {
+var isWindowsPlatform = function () {
+  return isWindows;
+};
 
-  var theConfig;
-  var config_file = "cordova-create.json";
-
-  //Write some stuff to the screen
-  //console.log("\n" + stars);
-  console.log("Getting configuration");
+//========================================================================
+// getConfigFile()
+//========================================================================
+var getConfigFile = function () {
   //----------------------------------------------------------------------
   //Determine the user's home folder, varies per OS.
   //----------------------------------------------------------------------
+  var config_file = "cordova-create.json";
+  var config_path;
+
   var theEnv = process.env;
   if (isWindows) {
     console.log("Running on Windows");
@@ -175,14 +179,24 @@ var Config = function () {
     console.error("Unable to determine home folder".error);
     process.exit(1);
   }
+  //Return whatever result we got
+  return config_path;
+};
 
-  //--------------------------------------------------------------------
-  // Does file exist?
-  //--------------------------------------------------------------------
-  if (fs.existsSync(config_path)) {
+//========================================================================
+// getConfig()
+//========================================================================
+var getConfig = function () {
+  console.log("Getting configuration");
+  //Object to hold the config information
+  var theConfig;
+  //Figure out where the config file is located
+  var configFile = getConfigFile();
+  // Does the configuration file exist?
+  if (fs.existsSync(configFile)) {
     //Read the file
     console.log("Reading configuation file");
-    var theData = fs.readFileSync(config_path, 'utf8');
+    var theData = fs.readFileSync(configFile, 'utf8');
     //Make sure the config has all of the options it should
     theConfig = checkConfig(JSON.parse(theData));
   } else {
@@ -193,4 +207,13 @@ var Config = function () {
   //Return the app's config to the calling program
   return theConfig;
 };
-module.exports = Config;
+
+//========================================================================
+// Exports
+//========================================================================
+//export the function that returns the config object
+module.exports.getConfig = getConfig;
+//Return the file path for the app's configuration file
+module.exports.getConfigFile = getConfigFile;
+//Returns true if the script is running on the Windows platform
+module.exports.isWindows = isWindowsPlatform;
