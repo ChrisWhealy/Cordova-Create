@@ -7,13 +7,11 @@ var colors = require('colors'),
   path = require('path'),
   os = require('os');
 
-var blankStr = '';
-
 //Set the following to true to write status
 //to the console as it runs
 var debugMode = false;
-//Create a variable to hold the path name pointing to the configuration file
-var config_path;
+//Some string constants
+var blankStr = '';
 var stars = "***************************************";
 
 colors.setTheme({
@@ -38,7 +36,7 @@ function doLog(msgText) {
 //========================================================================
 // Validate the contents of the config file
 //========================================================================
-function checkConfig(theConfig) {
+function checkConfig(configFile, theConfig) {
 
   //Track whether the config file has been changed
   var configChanged = false;
@@ -120,13 +118,13 @@ function checkConfig(theConfig) {
   if (configChanged) {
     console.log("Writing configuration file");
     try {
-      console.log("Writing configuration to " + config_path);
-      fs.writeFileSync(config_path, JSON.stringify(theConfig, null, 4));
+      console.log("Writing configuration to " + configFile);
+      fs.writeFileSync(configFile, JSON.stringify(theConfig, null, 4));
       //if on Linux variant...set the file permissions
       if (!isWindows) {
         console.log("Setting file permissions");
         try {
-          fs.chmodSync(config_path, 0777);
+          fs.chmodSync(configFile, 0777);
         } catch (err) {
           console.error("Unable to set file permissions: %s".error, err.code);
           console.error("Error object: %s".error, JSON.stringify(err));
@@ -157,30 +155,30 @@ var getConfigFile = function () {
   //----------------------------------------------------------------------
   //Determine the user's home folder, varies per OS.
   //----------------------------------------------------------------------
-  var config_file = "cordova-create.json";
-  var config_path;
+  var configFile = "cordova-create.json";
+  var configPath;
 
   var theEnv = process.env;
   if (isWindows) {
     console.log("Running on Windows");
     //Set the default home folder for Windows
-    config_path = theEnv.USERPROFILE;
+    configPath = theEnv.USERPROFILE;
   } else {
     console.log("Runnning on a Linux variant");
     //Home folder for OS X and Linux
-    config_path = theEnv.HOME;
+    configPath = theEnv.HOME;
   }
   //Do we have a value?
-  if (config_path.length > 0) {
-    console.log('Home folder: ' + config_path);
-    config_path = path.join(config_path, config_file);
-    console.log('Configuration file: ' + config_path);
+  if (configPath.length > 0) {
+    console.log('Home folder: ' + configPath);
+    configPath = path.join(configPath, configFile);
+    console.log('Configuration file: ' + configPath);
   } else {
     console.error("Unable to determine home folder".error);
     process.exit(1);
   }
   //Return whatever result we got
-  return config_path;
+  return configPath;
 };
 
 //========================================================================
@@ -191,18 +189,18 @@ var getConfig = function () {
   //Object to hold the config information
   var theConfig;
   //Figure out where the config file is located
-  var configFile = getConfigFile();
+  var configPath = getConfigFile();
   // Does the configuration file exist?
-  if (fs.existsSync(configFile)) {
+  if (fs.existsSync(configPath)) {
     //Read the file
     console.log("Reading configuation file");
-    var theData = fs.readFileSync(configFile, 'utf8');
+    var theData = fs.readFileSync(configPath, 'utf8');
     //Make sure the config has all of the options it should
     theConfig = checkConfig(JSON.parse(theData));
   } else {
     //Don't have a config file, so lets create one
     console.log("Creating configuration file");
-    theConfig = checkConfig({});
+    theConfig = checkConfig(configPath, {});
   }
   //Return the app's config to the calling program
   return theConfig;
