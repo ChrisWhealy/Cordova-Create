@@ -196,7 +196,7 @@ var getConfig = function () {
     console.log("Reading configuation file");
     var theData = fs.readFileSync(configPath, 'utf8');
     //Make sure the config has all of the options it should
-    theConfig = checkConfig(JSON.parse(theData));
+    theConfig = checkConfig(configPath, JSON.parse(theData));
   } else {
     //Don't have a config file, so lets create one
     console.log("Creating configuration file");
