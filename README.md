@@ -147,7 +147,7 @@ When a global configuration file is created for the first time, will have the fo
 
 <a name="header7"></a>
 ##Configuration Property Names
-* `cordovaDebug : {Boolean}`
+* `cordovaDebug : Boolean`
 
   Switches on or off the Cordova `-d` flag.  With this option set to true, additional information will be written to the console as the Cordova CLI commands are executed.
   
