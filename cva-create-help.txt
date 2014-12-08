@@ -1,0 +1,30 @@
+To create a global configuration file containing default values, run the
+command:
+
+  cva-create gen_config
+
+When this has completed, you will find a cva-create.json file in your home
+directory.
+
+
+To create a new project using this command, open a terminal window and navigate
+to the folder where you want the project created and issue the following
+command:
+
+  cva-create app_dir app_id app_name [platform list]
+
+The platform list is optional.  If you do not specify any platforms as
+parameters, then cva-create will add the platforms listed in your local
+configuration file.  If a local configuration file does not exist, then the
+platforms listed in the global configuration file will be added.
+
+So, if Android and iOS are listed as default platforms in your global
+configuration file, then to create a project called Thingamajig in a folder
+called thing_1 you would use the following command:
+
+  cva-create thing_1 com.mycorp.thingamajig Thingamajig
+
+To create the same project, but add in the Firefox OS platform as well, you
+would use the following command:
+
+  cva-create thing_1 com.mycorp.thingamajig Thingamajig firefoxos
