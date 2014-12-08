@@ -1,26 +1,34 @@
 {
-  "name": "cordova-create",
-  "description": "A node command for creating a simple Cordova project with a couple of common plugins.",
-  "version": "0.0.18",
+  "name": "cva-create",
+  "description": "A node command for creating a Cordova project based on configurable parameters",
+  "version": "0.1.0",
   "engines": {
     "node": ">= 0.10.0"
   },
-  "author": "John M. Wargo <john@johnwargo.com> (http://www.johnwargo.com/)",
+  "author": {
+    "name": "Chris Whealy",
+    "email": "chris@whealy.com",
+    "url": "http://www.whealy.com/"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/johnwargo/Cordova-Create"
+    "url": "https://github.com/ChrisWhealy/Cordova-Create"
   },
   "bin": {
-    "cordova-create": "cordova-create.js"
+    "cva-create": "cva-create.js"
   },
   "keywords": [
     "Cordova"
   ],
   "dependencies": {
-    "shelljs": "^0.3.0",
-    "colors": "^0.6.2"
+    "colors": "^0.6.2",
+    "shelljs": "^0.3.0"
   },
   "devDependencies": {},
   "preferGlobal": true,
-  "license": "MIT"
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ChrisWhealy/Cordova-Create/issues"
+  },
+  "homepage": "https://github.com/ChrisWhealy/Cordova-Create"
 }
