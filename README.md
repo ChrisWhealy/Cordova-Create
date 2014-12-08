@@ -1,116 +1,288 @@
-cordova-create
-==============
-A node command for creating a simple Cordova project with a couple of common platforms and plugins added. Essentially, this command replaces the common set of commands a Cordova developer types every (and I do mean every) time he or she creates a new Cordova project. 
+<a name="top"></a>
+#cva-create
 
-If you create an occasional Cordova application, this probably won't be that useful to you. For me, in my day job as a product manager for a set of enterprise plugins for Apache Cordova and my side job, which is producing a catalog of books on Apache Cordova, I find that I'm constantly creating new Cordova projects. This module should save you a little time and make it very easy to create new Cordova projects.
+<a name="header1"></a>
+##Overview
+**cva-create** is a tool designed primarily to help people who regularly create Cordova applications.  If you're an occasional Cordova user, you might not find this tool so useful.
 
-The module is customizable; when you run the command the first time, it creates a configuration file that you can easily modify to customize how the module works for you. Through the configuration file, you can specify the platforms and plugins that are added to the project created using the command. You can even enable debug mode, which causes the module to execute the `cordova` command with it's debug (-d) command line option. All of the customization capabilities will be described later.
+**cva-create** creates a simple Cordova project for any platform and adds a configurable number of plugins.  In a single command, this tool performs the following sequence of Cordova CLI commands:
 
-Requirements
-============
-This module expects that you have a functional Apache Cordova development environment running. This includes the appropriate native SDKs (Android Development Tools, Xcode and so on), NodeJS and other associated tools. As the command is a node module, it relies upon the same technology as the Cordova CLI does. 
+1. `cordova create <app dir> <app id> <app name>`
+2. `cd <app dir>`
+3. `cordova platform add <platform names>`
+4. One or more invocations of `cordova plugin add <plugin name>`
+5. Optionally runs `cordova prepare`
 
-This module has been tested on Windows, Macintosh OS X and Ubuntu Linux.
 
-An excellent resource for information on how to setup a Cordova development environment is my [Apache Cordova 3 Programming](http://www.cordovaprogramming.com) book.
 
-Installation
-============
-Install this module using npm by opening a terminal window and executing the following command:
+<a name="header2"></a>
+##Attribution
+`cva-create` is a fork of John Wargo's [cordova-create tool](https://github.com/johnwargo/Cordova-Create).
+
+John is the author of several books on PhoneGap and Cordova such as [Apache Cordova 3 Programming](http://www.cordovaprogramming.com).  
+For more details, see [http://www.johnwargobooks.com].
+
+
+
+<a name="header3"></a>
+##Requirements
+This module expects the following software already to be installed, configured and working:
+
+1. An Apache Cordova development environment, including the appropriate native SDKs (Android Development Tools, Xcode etc.)
+2. NodeJS and other associated tools such as `npm`.
+
+
+
+<a name="header4"></a>
+##Installation
+Install this module globally using `npm`.  From a terminal window, execute the following command:
 
 Windows:
 
-	npm install -g cordova-create
+	npm install -g cva-create
 
-Macintosh OS X and Linux:
+Macintosh OS X:
 
-	sudo npm install -g cordova-create
+	sudo npm install -g cva-create
+
+Alternatively, if you've downloaded the ZIP file from GitHub, you can install the module as follows:
+
+1. Expand the ZIP file into some working directory
+2. Open a terminal window and change into the above working directory
+3. Issue the following command:
+  * Windows:
+  
+      `npm install -g`
+  * Mac OS X:
+  
+      `sudo npm install -g`
 
 
-If you've downloaded this module's code from GitHub, you can install the module by extracting the files then opening a terminal window and navigating to the folder where this file is located and issuing the following command:
 
-Windows:
+<a name="header5"></a>
+##Usage
+1. Start by creating the global configuration file.  Open a terminal window and run:
 
-	npm install -g
+    `cva-create gen_config`
+  
+   Using the `gen_config` parameter will not cause a Cordova project to be built.  Instead it will simply create a file called `cva-create.json` in your home directory.  This file contains a set of parameters that will be used as default values when `cva-create` builds a Cordova application.
 
-Macintosh OS X and Linux:
+2. Edit `cva-create.json` as appropriate for your situation.
 
-	sudo npm install -g
+  For instance, if your apps always use the plugin `org.apache.cordova.network-information`, then adding this string to the list of plugins will mean it is automatically added to all projects built by `cva-create`.
 
-Usage
-===========
-To create a new project using this command, open a terminal window and navigate to the folder where you want the project created and issue the following command:
+3. To create a new Cordova project, open a terminal window, navigate to the directory in which you want the project built and issue the *cva-create* command with the following pattern of arguments:
 
-	cordova-create folder app_id app_name [platform list]
+	`cva-create <app dir> <app id> <app name> <zero or more platform names>`
 
-The first three parameters are the same parameters you would use with the `cordova create` command. The platform list, shown as an optional parameter (by the use of brackets), defines the list of target platforms you want to use for the application project.
+  Where:
+  
+  * `<app dir>` is the directory into which the Cordova project will be written.
 
-To create a sample Android project called Hello2 in a folder called hello_2 you would use the following command:
+  * `<app id>` is the identity of the application (for instance, `com.mycorp.thingamajig`)
 
-	cordova-create hello_2 com.johnwargo.hello2 Hello2 android
+  * `<app name>` is the name of the application seen by the user of the mobile device.
 
-To create the same project, but include an iOS project as well, you would use the following command:
+  * `<platform names>` is an optional set of target platforms. If this list is omitted, then the default platforms listed in the Global Configuration file will be used instead.
+    
+  The first three parameters are the same as would be used with the Cordova CLI command `cordova create`.
 
-	cordova-create hello_2 com.johnwargo.hello2 Hello2 android ios
+  For instance, if Android and iOS are listed as the default platforms in the Global Configuration file, then to create a Cordova project for both of these platforms called "Thingamajig" in a directory called "thing_1" you would use the following command:
 
-If you do not specify a platform list on the command line, the set of default platforms for your current operating system (described below) will be used.
+	`cva-create thing_1 com.mycorp.thing1 Thingamajig`
 
-To launch the system's default editor to edit the application's configuration file (described in the next section), use the following command:
+  To create a project for a platform not listed as a default, simply add the platform name(s).  E.G. for Firefox OS, add "firefoxos":
 
-	cordova-create /config 
+	`cva-create thing_1 com.mycorp.thing1 Thingamajig firefoxos`
 
-Customization
-======================
-When the command runs for the first time, it creates a configuration file that can be used to customize the tasks the command performs when it runs. The configuration file is called `cordova-create.json` and it can be located in the user's home folder. On Windows you can find the file in the c:\users\user_name folder (replacing user_name with the login name for the current user). On Macintosh OS X, the file is located in the user's home folder at /Users/user_name (again replacing user_name with the user's logon name).
+4. If you wish a particular project to use values other than those defined in the global configuration file, then copy the `cva-create.json` from your home directory into the local project directory and edit it to contain project specific values.
 
-The default options for the application are defined in the following JSON object stored in the configuration file:
+  The property values in the local configuration file will now override the corresponding values in global configuration file.  See the section on [Using a Local Configuration File](#header8) for details.
+
+
+
+
+<a name="header6"></a>
+##Global Configuration File
+When the `cva-create` tool is run using only the `gen_config` parameter, if the file `create-cordova.json` does not exist in your home directory, then it will be created.
+
+If this file already exists, then it will remain unmodified.  Either way, a Cordova project will not be created.
+
+On Windows you can find the global configuration file in the directory `c:\users\<user_name>` (replacing `<user_name>` with the logon name of the current user).
+
+On Mac OS X, this file is located in the user's home directory at /Users/`<user_name>` (again replacing `<user_name>` with the current user's logon name).
+
+When a global configuration file is created for the first time, will have the following content:
 
     {
-      "platformList": [ "android", "firefoxos", "ios" ],
-      "pluginList": [ "org.apache.cordova.console", "org.apache.cordova.dialogs", "org.apache.cordova.device" ],
-      "enableDebug": false,
-	  "copyFrom": "folder_path"
-	  "linkTo": "folder_path"
-	  "createParms": "\"{\\\"plugin_search_path\\\":\\\"d:/dev/\\\"}\""
+      "cordovaDebug": false,
+      "copyFrom": "",
+      "linkTo": "",
+      "createParms": "",
+      "replaceTargetDir": false,
+      "runPrepare": false,
+      "pluginList": [
+        "org.apache.cordova.console",
+        "org.apache.cordova.dialogs",
+        "org.apache.cordova.device"
+      ],
+      "platformList": [
+        "android",
+        "ios"
+      ],
+      "proxy": {
+        "useProxy": false,
+        "http": {
+          "host": "",
+          "port": 0
+        },
+        "https": {
+          "host": "",
+          "port": 0
+        }
+      }
     }
 
-To change the module's configuration, edit the JSON object, providing your own values for the configuration options described by the object. 
 
-The default list of target platforms will differ depending on what operating system you are using. If you look at the script's code, you will see the following default platforms lists:
 
-  	var default_platforms_linux = ['ubuntu'];
-  	var default_platforms_osx = ['android', 'ios'];
-  	var default_platforms_win = ['android', 'windows'];
-	
-You can add third party plugins to the pluginlist. This should work as long as the Cordova CLI can load the plugins using the plugin's ID. Where this won't work is for locally installed plugins. If you want to use locally installed plugins, you will need to set a plugin search path during the call to the `cordova create` command. 
+<a name="header7"></a>
+##Configuration Property Names
+* `cordovaDebug : {Boolean}`
 
-The enableDebug parameter causes the module to add the debug (-d) parameter to all `cordova` CLI commands. With this option set to true, additional information will be written to the console as the Cordova CLI commands are executed. You will want to enable this option if something isn't working with the command and you want more information about what's happening as the different commands are executed. 
+  Switches on or off the Cordova `-d` flag.  With this option set to true, additional information will be written to the console as the Cordova CLI commands are executed.
+  
+  Typically, you should leave this property set to `false` something in the build process isn't working.
 
-The copyFrom property allows you to specify the folder path that is used for the source for the web application content for the created application. When a non-blank value is provided here, the `cordova create` command is enhanced by adding a `--copy-from "folder_path"` to the end of the command. The folder_path can be an absolute or relative path - all that matters is that the Cordova CLI can resolve the path.
+* `copyFrom : String`
 
-With linkto, a symbolic link is created in the project's www folder that points to the specified folder path. When a non-blank value is provided here, the `cordova create` command is enhanced by adding a `--link-to "folder_path"` to the end of the command. The folder_path can be an absolute or relative path; all that matters is that the Cordova CLI can resolve the path.
+  The directory from which the contents of the `www` directory should be copied
 
-The createParms property defines a JSON object that is used to populate a `config.json` file located in the new project's `.cordova` folder.  When a non-blank value is provided here, the JSON object is passed as a parameter on the end of the `cordova create` command. Using the example above, this option instructs the CLI to populate the `cordova.json` file with the following content: 
+* `linkTo : String`
 
-	{ "plugin_search_path": "d:/dev/" }
+  The directory to which the `www` directory should be linked
 
-With this in place, any `platform add` commands will search the specified path for plugins. The weird triple backslashes in the JSON string are there so that the content's quote and backslash characters will be properly escaped by the JSON parser. You can populate additional properties in the `config.json` file by appending the appropriate JSON content to the createParms property.
+* `createParms : String`
 
-Note: You can create an empty folder then enable this option (passing in the path to the empty folder) to create a Cordova project with no web application content in the application's www folder.
+  A string representing a double-escaped JSON object containing parameters such as the path name to a local plugins directory
 
-Many people enable the option by default for all cordova commands, but this really doesn't make sense since, in a properly configured Cordova development environment, stuff just works. Don't succumb, only enable this option when it's really useful or needed. 
+* `replaceTargetDir : Boolean`
 
-Update History
-==============
-November 5, 2014
-----------------
-Added /config command-line option. Opens the application's configuration file in the system's default editor.  
+  If the target directory for this Cordova project already exists, should it be replaced?
 
-October 28, 2014
------------------
-Added support for the Cordova CLI create command's --link-to switch.
+* `runPrepare : Boolean`
 
-Added support for passing additional parameters to the create command. This was added in order to support adding a plugin search path to the project's configuration when first creating the project. This was needed to support the SAP Mobile Platform Hybrid SDK since the SDK plugins are installed locally and the CLI has issues locating dependent plugins when installed locally.  
- 
+  Determines whether "cordova prepare" should be run after all teh plugins have been added
+
+* `pluginList : [String]`
+
+  A list containing the plugins common to all your Cordova projects.
+
+  You can add third party plugins to this list as long as the Cordova CLI can load the plugins using the plugin's ID.  Where this won't work is for locally installed plugins.  If you want to use locally installed plugins, you will need to set a plugin search path during the call to the `cordova create` command using the `createParms` property.
+
+* `platformList : [String]`
+
+  A list containing the names of the default platforms.
+
+  **Important**: The value of the default `platformList` in the global configuration file is OS dependent and is decided as follows:
+
+        windows : ['android', 'windows']
+        linux   : ['ubuntu']
+        osx     : ['android', 'ios']
+        unknown : ['android']
+
+* `proxy : {Object}`
+
+  An object containing host name and port number for both HTTP and HTTPS proxies, and a Boolean flag to indicate whether the proxy settings should be used or not.  
+  This is useful if you sometimes need to work outside a corporate network where the proxy settings are no longer needed.
+
+To change the module's configuration, edit the file, providing your own values for the configuration options described above.
+
+
+
+<a name="header8"></a>
+##Using a Local Configuration File
+If you choose to create a local configuration file, then:
+
+1. This file must live in the directory from which the cva-create command is run.
+2. The local configuration file should contain only those properties that differ from the global configuration file.
+
+The rule for merging global and local configuration values is that all values in the local configuration file will override the corresponding values found in the global configuration file **except** for the list of plugins.
+
+The list of plugins in the local configuration file is always **added** to the list of plugins found in the global configuration file (duplicate entries are removed).
+
+For instance, a local configuration file could contain the following:
+
+    {
+        "cordovaDebug"     : true,
+        "linkTo"           : "./demo_www",
+        "createParms"      : "\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\"",
+        "replaceTargetDir" : true,
+        "runPrepare"       : true,
+        "platformList"     : ['ios'],
+        "pluginList" : [
+          "https://github.com/vstirbu/PromisesPlugin.git",
+          "org.apache.cordova.network-information",
+          "com.sap.mp.cordova.plugins.logon",
+          "com.sap.mp.cordova.plugins.odata"
+        ]
+    }
+
+Here, the values in the global configuration file are over-ridden as follows (the order in which these properties are specified is not important):
+
+1. `"cordovaDebug": true`
+
+  The `-d` (for debug) option will be added to each Cordova CLI command.
+  
+2. `"linkTo": "./demo_www"`
+
+   The cordova "www" directory will be linked to an existing directory accessed using the relative pathname "./demo_www"
+
+3. `"createParms": "\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\""`
+
+   We want to use some 3rd-party Cordova plugins that live in the `"/usr/3rd-party/plugins/"` directory.
+
+   Notice that the string value has been escaped twice (resulting in the need for a triple backslash in places)!
+   
+   This is necessary because when the value is read by this node module, one level of escape characters will be consumed.  Whatever string remains must still retain the correct escape syntax for the embedded double-quote characters:
+   
+   Parsing an escaped string removes one level of escape characters:
+   
+   `"\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\""`
+   
+   becomes:
+
+   `"{\"plugin_search_path\": \"/usr/3rd-party/plugins\"}"`
+
+   This parsed string value still contains escaped double quote characters and can now be passed as a parameter to the `cordova create` command
+
+4. `"replaceTargetDir": true`
+
+   If we need to re-run this command to re-create the project, then the existing target directory will be replaced; that is, it will be deleted and re-created!
+   
+   **Use with care!**
+
+5. `"runPrepare": true`
+
+   The `cordova prepare` CLI command will be issued after all the plugins have been added
+
+6. `"platformList": ['ios']`
+
+   We want to create only an ios project.
+
+7. ```"pluginList": [
+      "https://github.com/vstirbu/PromisesPlugin.git",
+      "org.apache.cordova.network-information",
+      "com.sap.mp.cordova.plugins.logon",
+      "com.sap.mp.cordova.plugins.odata"
+    ]```
+
+  This list of plugins is used to extend the list of plugins found in the global configuration file.
+  
+  The plugins that are actually added to your application will be the sum of the global and local plugin lists (after duplicates have been removed) in which the plugin order has been preserved - global first, then local.
+
+
+
+
+
 * * *
-By [John M. Wargo](http://www.johnwargo.com) - if you like and/or use this module, why not pick up [one of my books](http://www.johnwargobooks.com)?
+&copy; 2014 [Chris Whealy](http://www.whealy.com)
