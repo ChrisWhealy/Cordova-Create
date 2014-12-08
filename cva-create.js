@@ -8,7 +8,7 @@
  * parameters
  * 
  * Author      : Chris Whealy (www.whealy.com)
- * Forked from : cordova-create by John M. Wargo (www.johnwargo.com)
+ * Forked from : Cordova-Create by John M. Wargo (www.johnwargo.com)
  * ============================================================================
  **/
 
@@ -181,9 +181,9 @@ var hasGit           = (shelljs.exec('git --version', shhhh).code === 0);
 var npmHttpProxySet  = (function(r) { return !(r.code === 0 && r.output.indexOf('null') === 0); })(shelljs.exec(checkNpmHttpProxy,shhhh));
 var npmHttpsProxySet = (function(r) { return !(r.code === 0 && r.output.indexOf('null') === 0); })(shelljs.exec(checkNpmHttpsProxy,shhhh));
 
-  utils.writeToConsole('log',[['\nGIT is' + (hasGit ? ' ' : 'not ') + 'installed']]);
-  utils.writeToConsole('log',[['npm HTTP proxy is ' + (npmHttpProxySet ? 'set' : 'unset')]]);
-  utils.writeToConsole('log',[['npm HTTPS proxy is ' + (npmHttpsProxySet ? 'set' : 'unset')]]);
+  utils.writeToConsole('log',[['\nGIT is' + (hasGit ? ' ' : 'not ') + 'installed'],
+                              ['npm HTTP proxy is ' + (npmHttpProxySet ? 'set' : 'unset')],
+                              ['npm HTTPS proxy is ' + (npmHttpsProxySet ? 'set' : 'unset')]]);
 
 // ========================================================================
 // Define how to execute a Cordova command
