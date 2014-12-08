@@ -112,7 +112,7 @@ On Windows you can find the global configuration file in the directory `c:\users
 
 On Mac OS X, this file is located in the user's home directory at /Users/`<user_name>` (again replacing `<user_name>` with the current user's logon name).
 
-When a global configuration file is created for the first time, will have the following content:
+When a global configuration file is created for the first time, it will have the following content:
 
     {
       "cordovaDebug": false,
@@ -151,7 +151,7 @@ When a global configuration file is created for the first time, will have the fo
 
   Switches on or off the Cordova `-d` flag.  With this option set to true, additional information will be written to the console as the Cordova CLI commands are executed.
   
-  Typically, you should leave this property set to `false` something in the build process isn't working.
+  Typically, you should leave this property set to `false` unless something in the build process isn't working.
 
 * `copyFrom : String`
 
@@ -171,7 +171,7 @@ When a global configuration file is created for the first time, will have the fo
 
 * `runPrepare : Boolean`
 
-  Determines whether "cordova prepare" should be run after all teh plugins have been added
+  Determines whether `cordova prepare` should be run after all the plugins have been added
 
 * `pluginList : [String]`
 
@@ -203,8 +203,8 @@ To change the module's configuration, edit the file, providing your own values f
 ##Using a Local Configuration File
 If you choose to create a local configuration file, then:
 
-1. This file must live in the directory from which the cva-create command is run.
-2. The local configuration file should contain only those properties that differ from the global configuration file.
+1. This file must live in the directory from which the `cva-create` command is run.
+2. The local configuration file need only contain those properties that **differ** from the global configuration file.
 
 The rule for merging global and local configuration values is that all values in the local configuration file will override the corresponding values found in the global configuration file **except** for the list of plugins.
 
@@ -245,7 +245,7 @@ Here, the values in the global configuration file are over-ridden as follows (th
    
    This is necessary because when the value is read by this node module, one level of escape characters will be consumed.  Whatever string remains must still retain the correct escape syntax for the embedded double-quote characters:
    
-   Parsing an escaped string removes one level of escape characters:
+   Parsing this double-escaped string removes one level of escape characters, so:
    
    `"\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\""`
    
@@ -269,11 +269,11 @@ Here, the values in the global configuration file are over-ridden as follows (th
 
    We want to create only an ios project.
 
-7. ```"pluginList": [
-      "https://github.com/vstirbu/PromisesPlugin.git",
-      "org.apache.cordova.network-information",
-      "com.sap.mp.cordova.plugins.logon",
-      "com.sap.mp.cordova.plugins.odata"
+7. ```"pluginList": [  
+      "https://github.com/vstirbu/PromisesPlugin.git",  
+      "org.apache.cordova.network-information",  
+      "com.sap.mp.cordova.plugins.logon",  
+      "com.sap.mp.cordova.plugins.odata"  
     ]```
 
   This list of plugins is used to extend the list of plugins found in the global configuration file.
