@@ -209,6 +209,15 @@ var buildInstructions = [];
 
 buildInstructions.addInstruction = function(fn,p) { this.push({fn:fn, p:p}) };
 
+// If both the copyFrom and linkTo properties are set to valid directories,
+// then apart from being a nonsensical combination of configuration values,
+// we will arbitrarily use copyFrom in preference to linkTo
+var cmdSuffix = (fs.existsSync(theConfig.copyFrom))
+                ? ' --copy-from "' + theConfig.copyFrom + '"'
+                : (fs.existsSync(theConfig.linkTo))
+                  ? ' --link-to "' + theConfig.linkTo + '"'
+                  : '';
+
 // ========================================================================
 // Define npm and GIT proxy settings
 // ========================================================================
@@ -255,7 +264,7 @@ var setProxy = (function(pConf) {
 
 // Create Cordova project
   buildInstructions.addInstruction(utils.writeToConsole, ['log',[["\n\nCreating project".warn]]]);
-  buildInstructions.addInstruction(executeCordovaCommand,['create ' + targetFolder + ' ' + appID + ' "' + appName + '" ' + theConfig.createParms]);
+  buildInstructions.addInstruction(executeCordovaCommand,['create ' + targetFolder + ' ' + appID + ' "' + appName + '" ' + theConfig.createParms + cmdSuffix]);
 
 // Change into the target folder directory
   buildInstructions.addInstruction(utils.writeToConsole, ['log',[["\n\nChanging to project folder (%s)".warn, targetFolder],[utils.separator]]]);
