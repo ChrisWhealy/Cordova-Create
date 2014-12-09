@@ -154,11 +154,15 @@ When a global configuration file is created for the first time, it will have the
 
 * `copyFrom : String`
 
-  The directory from which the contents of the `www` directory should be copied
-
+  The directory from which the contents of the `www` directory should be copied.
+  
 * `linkTo : String`
 
   The directory to which the `www` directory should be linked
+
+  If the `copyFrom` or `linkTo` properties are needed, then specify a valid directory for one of these properties, but not both!
+  If both properties point to valid directories, then the `copyFrom` property supercedes the `linkTo` property.
+  If either of these properties are blank or point to a non-existent directory, the property will be ignored.
 
 * `createParms : String`
 
