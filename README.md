@@ -19,8 +19,7 @@
 ##Attribution
 `cva-create` is a fork of John Wargo's [cordova-create tool](https://github.com/johnwargo/Cordova-Create).
 
-John is the author of several books on PhoneGap and Cordova such as [Apache Cordova 3 Programming](http://www.cordovaprogramming.com).  
-For more details, see [http://www.johnwargobooks.com].
+John is the author of several books on PhoneGap and Cordova such as [Apache Cordova 3 Programming](http://www.cordovaprogramming.com). For more details, see (John's website)[http://www.johnwargobooks.com].
 
 
 
