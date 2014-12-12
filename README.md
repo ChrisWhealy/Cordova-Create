@@ -284,7 +284,6 @@ For instance, a local configuration file could contain the following:
       "platformList"     : ['ios'],
       "pluginList" : [
         "https://github.com/vstirbu/PromisesPlugin.git",
-        "org.apache.cordova.network-information",
         "com.sap.mp.cordova.plugins.logon",
         "com.sap.mp.cordova.plugins.odata"
       ],
@@ -293,12 +292,12 @@ For instance, a local configuration file could contain the following:
         {
           "elementName" : "name",
           "attributes"  : {},
-          "content": "SD MY Contacts Fiori App"
+          "content": "My Cool Cordova App"
         },
         {
           "elementName" : "description",
           "attributes"  : {},
-          "content": ["Offline version of the SD My Contacts Fiori application"]
+          "content": "This app is so cool, it can do everything except squeeze orange juice and tie shoelaces"
         }
       ]
     }
@@ -347,7 +346,6 @@ Here, the values in the global configuration file are over-ridden as follows (th
 
 7. ```"pluginList": [  
       "https://github.com/vstirbu/PromisesPlugin.git",  
-      "org.apache.cordova.network-information",  
       "com.sap.mp.cordova.plugins.logon",  
       "com.sap.mp.cordova.plugins.odata"  
     ]```
