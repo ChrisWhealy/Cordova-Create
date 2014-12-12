@@ -371,7 +371,7 @@ When a new Cordova project is created, the basic properties of that project are 
 A sample of this file looks like this:
 
     <?xml version='1.0' encoding='utf-8'?>
-    <widget id="cus.sd.mycontacts" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <widget id="mycordovaapp.mycorp.com" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
         <name>MyCordovaApp</name>
         <description>
             A sample Apache Cordova application that responds to the deviceready event.
@@ -395,14 +395,16 @@ The following configuration properties must be defined:
 3. Each JSON object must have exactly the following properties - even if you do not intend to add any values to these properties:
 
     ````{
-      "elementName" : "",
-      "attributes"  : {},
-      "content"     : []
+      "elementName" : "",  
+      "attributes"  : {},  
+      "content"     : []  
     }````
 
 <a name="header10_1"></a>
 ###XML Element: No Attributes And A Simple String As Content   
-If you wish to add an XML element that does not use attributes, and contains only a string value as its content, then add the following object as an element in the `configXmlWidget` array.  The `<description>` element is a good example:
+If you wish to add an XML element that does not use attributes, and contains only a string value as its content, then add the following object as an element in the `configXmlWidget` array.
+
+The `<description>` element is a good example:
 
     "configXmlWidget": [
       { "elementName" : "description",
@@ -423,7 +425,9 @@ Alternatively, since the content is a simple string value, the enclosing array c
 
 <a name="header10_2"></a>
 ###XML Element: One Or More Attributes And A Simple String As Content   
-If you wish add an XML element that has both attributes and content, then add the following object as an element in the `configXmlWidget` array.  The `<author>` element is a good example here:
+If you wish add an XML element that has both attributes and content, then add the following object as an element in the `configXmlWidget` array.
+
+The `<author>` element is a good example here:
 
     "configXmlWidget": [
       { "elementName" : "author",
@@ -439,7 +443,9 @@ As above, the `content` property can be either a simple string, or an array with
 
 <a name="header10_3"></a>
 ###Empty XML Element: One Or More Attributes But No Content   
-If you wish to add an XML element that has attributes, but no content, then add the following as an element in the `configXmlWidget` array.  The `<preference>` XML element is a good example here.  In this case we will set the time out period for the Cordova `deviceready` event to 15 seconds.
+If you wish to add an XML element that has attributes, but no content, then add the following as an element in the `configXmlWidget` array.
+
+The `<preference>` XML element is a good example here.  In this case we will set the time out period for the Cordova `deviceready` event to 15 seconds.
 
 **IMPORTANT**
 
@@ -465,7 +471,9 @@ This will then generate the following empty XML element: `<preference name="Load
 
 <a name="header10_4"></a>
 ###XML Element: One Or More Attributes And Structured Content   
-If you wish to add an XML element that has both attributes and structured (that is, non-string) content, then the `content` array property must contain one or more JSON objects of exactly the same structure used for the parent object.  A good example here is the `<feature>` element that can contain zero or more `<param>` elements:
+If you wish to add an XML element that has both attributes and structured (that is, non-string) content, then the `content` array property must contain one or more JSON objects of exactly the same structure used for the parent object.
+
+The `<feature>` element is a good example, since it can contain zero or more `<param>` elements:
 
     "configXmlWidget": [
       { "elementName" : "feature",
