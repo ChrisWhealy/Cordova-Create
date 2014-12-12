@@ -99,8 +99,9 @@
 
 var app     = require('./Config.js');
 var utils   = require('./utils.js');
-var colors  = require('colors')
-var fs      = require('fs')
+var path    = require('path');
+var colors  = require('colors');
+var fs      = require('fs');
 var shelljs = require('shelljs');
 
 var cmdStr = 'cva-create app_dir app_id app_name [platform list]';
@@ -129,20 +130,24 @@ var userArgs = process.argv.slice((process.argv[0].toLowerCase() == 'node') ? 2 
 var targetFolder, appID, appName = '';
 var platformArgs, targetPlatforms = [];
 
-var gen_config = (userArgs[0] === 'gen_config');
+var action = (userArgs[0] !== 'gen_config' &&
+              userArgs[0] !== 'upgrade_config')
+             ? "build"
+             : userArgs[0];
 
 // ============================================================================
 // Get the app's configuration settings
 // ============================================================================
-var theConfig = new app.Config(gen_config);
+var theConfig = new app.Config(action);
 
-  // Is a global config file all that's needed?
-  if (gen_config) {
+  // Have we just done a gen_config or an upgrade?
+  if (action == 'gen_config' || action == 'upgrade_config') {
     // Yup, so we're done
     process.exit(0);    
   }
   else {
-    // Nope, so check that we've got enough parameters to work with
+    // Nope, so we need to do a build.
+    // Check that we've got enough parameters to work with
     if (userArgs.length > 2) {
       targetFolder    = userArgs[0];
       appID           = userArgs[1];
@@ -157,19 +162,19 @@ var theConfig = new app.Config(gen_config);
     }
   }
 
-// Write them to the log while we're testing this thing...
-//  utils.writeToConsole('log',[['\nApp Config: %s\n', JSON.stringify(theConfig)]]);
-
-// ========================================================================
+// ============================================================================
 // Check the target folder
-// ========================================================================
-  if (fs.existsSync(targetFolder)) {
+// ============================================================================
+var fqTargetFolder = path.join(process.env.PWD, targetFolder);
+  
+  if (fs.existsSync(fqTargetFolder)) {
     if (theConfig.replaceTargetDir) {
-     utils.writeToConsole('log',[["\nReplacing target folder %s".warn, targetFolder]]);
+     utils.writeToConsole('log',[["\nReplacing target folder %s".warn, fqTargetFolder]]);
      shelljs.rm('-rf',targetFolder);
     }
     else {
-     utils.writeToConsole('error',[["\nTarget folder %s already exists\n".error, targetFolder],[utils.separator]]);
+     utils.writeToConsole('error',[["\nTarget folder %s already exists\n".error, fqTargetFolder],
+                                   [utils.separator]]);
      process.exit(1);
     }
   }
@@ -181,19 +186,19 @@ var hasGit           = (shelljs.exec('git --version', shhhh).code === 0);
 var npmHttpProxySet  = (function(r) { return !(r.code === 0 && r.output.indexOf('null') === 0); })(shelljs.exec(checkNpmHttpProxy,shhhh));
 var npmHttpsProxySet = (function(r) { return !(r.code === 0 && r.output.indexOf('null') === 0); })(shelljs.exec(checkNpmHttpsProxy,shhhh));
 
-  utils.writeToConsole('log',[['\nGIT is' + (hasGit ? ' ' : 'not ') + 'installed'],
-                              ['npm HTTP proxy is ' + (npmHttpProxySet ? 'set' : 'unset')],
-                              ['npm HTTPS proxy is ' + (npmHttpsProxySet ? 'set' : 'unset')]]);
+  utils.writeToConsole('log',[['\nGIT is' + (hasGit ? ' ' : 'not ') + 'installed']]);
+  utils.writeToConsole('log',[['npm HTTP proxy is ' + (npmHttpProxySet ? 'set' : 'unset')]]);
+  utils.writeToConsole('log',[['npm HTTPS proxy is ' + (npmHttpsProxySet ? 'set' : 'unset')]]);
 
-// ========================================================================
+// ============================================================================
 // Define how to execute a Cordova command
-// ========================================================================
+// ============================================================================
 var cordovaCmd = (function(isDebug) {
   utils.writeToConsole('log',[["\nCordova debug mode is " + ((isDebug) ? "en" : "dis")+ "abled"]]);
   return 'cordova' + ((isDebug) ? ' -d ' : ' ');
 })(theConfig.cordovaDebug);
   
-var executeCordovaCommand = function(commandStr) {
+var execCvaCmd = function(commandStr) {
   var thisCmd = cordovaCmd + commandStr;
   utils.writeToConsole('log',[['Executing command: %s', thisCmd]]);
   var resCode = shelljs.exec(thisCmd).code;
@@ -218,9 +223,9 @@ var cmdSuffix = (fs.existsSync(theConfig.copyFrom))
                   ? ' --link-to "' + theConfig.linkTo + '"'
                   : '';
 
-// ========================================================================
+// ============================================================================
 // Define npm and GIT proxy settings
-// ========================================================================
+// ============================================================================
 var setProxy = (function(pConf) {  
   // Minimal validity test for proxy configuration
   if (pConf.useProxy && (pConf.http.host.length === 0)) {
@@ -241,10 +246,8 @@ var setProxy = (function(pConf) {
 
   // On *NIX boxes, do I need to care about writing the proxy settings to ~/.plugman/config?
   return function() {
-           utils.writeToConsole('log',[['\nUpdating npm HTTP proxy server settings'.warn], [npmCmdHttp]]);
+           utils.writeToConsole('log',[['\nUpdating npm proxy server settings'.warn], [npmCmdHttp]]);
            shelljs.exec(npmCmdHttp,shhhh);
-
-           utils.writeToConsole('log',[['\nUpdating npm HTTPS proxy server settings'.warn], [npmCmdHttps]]);
            shelljs.exec(npmCmdHttps,shhhh);
 
            if (hasGit) {
@@ -255,45 +258,60 @@ var setProxy = (function(pConf) {
          };
 })(theConfig.proxy);
 
-// ========================================================================
+// ============================================================================
 // Create instruction set for building this project
-// ========================================================================
+// ============================================================================
 
 // Set the npm proxy if required 
   buildInstructions.addInstruction(setProxy,[theConfig.proxy]);
 
 // Create Cordova project
   buildInstructions.addInstruction(utils.writeToConsole, ['log',[["\n\nCreating project".warn]]]);
-  buildInstructions.addInstruction(executeCordovaCommand,['create ' + targetFolder + ' ' + appID + ' "' + appName + '" ' + theConfig.createParms + cmdSuffix]);
+  buildInstructions.addInstruction(execCvaCmd,['create ' + targetFolder + ' ' + appID + ' "' + appName + '" ' + theConfig.createParms + cmdSuffix]);
 
 // Change into the target folder directory
-  buildInstructions.addInstruction(utils.writeToConsole, ['log',[["\n\nChanging to project folder (%s)".warn, targetFolder],[utils.separator]]]);
+  buildInstructions.addInstruction(utils.writeToConsole, ['log',[["\n\nChanging to project folder (%s)".warn, targetFolder]]]);
   buildInstructions.addInstruction(shelljs.pushd,[targetFolder, shhhh]);
 
 // Add platforms
-  buildInstructions.addInstruction(utils.writeToConsole,['log',[['\n\nAdding platforms [%s] to the project'.warn, targetPlatforms.join(', ')],[utils.separator]]]);
-  buildInstructions.addInstruction(executeCordovaCommand,['platform add ' + targetPlatforms.join(' ')]);
+  buildInstructions.addInstruction(utils.writeToConsole,['log',[["\n\n%s",utils.separator.warn],
+                                                                ['  Adding platforms [%s] to the project'.warn, targetPlatforms.join(', ')],
+                                                                [utils.separator.warn]]]);
+  buildInstructions.addInstruction(execCvaCmd,['platform add ' + targetPlatforms.join(' ')]);
 
 // Add plugins
-  buildInstructions.addInstruction(utils.writeToConsole,['log',[["\n\n"],[utils.separator.warn],["Adding Cordova Plugins".warn],[utils.separator.warn]]]);
+  buildInstructions.addInstruction(utils.writeToConsole,['log',[["\n\n%s",utils.separator.warn],
+                                                                ["  Adding Cordova Plugins".warn],
+                                                                [utils.separator.warn]]]);
 
   theConfig.pluginList.forEach(function(plugin) {
-    buildInstructions.addInstruction(utils.writeToConsole,['log',[["\n\nAdding plugin %s to project".warn, plugin]]]);
-    buildInstructions.addInstruction(executeCordovaCommand,['plugin add ' + plugin]);
+    buildInstructions.addInstruction(utils.writeToConsole,['log',[["\nAdding plugin %s to project".warn, plugin]]]);
+    buildInstructions.addInstruction(execCvaCmd,['plugin add ' + plugin]);
   });
+
+// ============================================================================
+// Execute build instructions
+// ============================================================================
+  buildInstructions.map(instructionHandler);
+
+// ============================================================================
+// Post build steps
+// ============================================================================
+
+// Optionally adjust the config.xml file
+  if (theConfig.adjustConfigXml) {
+    var xmlHandler    = require('./XmlHandler.js');
+    var xmlConfigFile = new xmlHandler.XmlConfigFile(fqTargetFolder);
+    
+    xmlConfigFile.update(theConfig.configXmlWidget);
+  }
   
 // Optionally run "cordova prepare"
   if (theConfig.runPrepare) {
-    buildInstructions.addInstruction(utils.writeToConsole,['log',[["\nRunning cordova prepare".warn]]]);
-    buildInstructions.addInstruction(executeCordovaCommand,['prepare']);
+    utils.writeToConsole('log',[["\n  Running cordova prepare".warn]]);
+    execCvaCmd('prepare');
   }
   
-// Finished
-  buildInstructions.addInstruction(utils.writeToConsole,['log',[["\nAll done!\n".help]]]);
-
-// ========================================================================
-// Execute build instructions
-// ========================================================================
-  buildInstructions.map(instructionHandler);
-  
+  // Bye!
+  utils.writeToConsole('log',[["\nAll done!\n".help]]);
 

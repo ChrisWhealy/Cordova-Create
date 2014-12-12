@@ -9,7 +9,7 @@
  * files
  * 
  * Author      : Chris Whealy (www.whealy.com)
- * Forked from : cordova-create by John M. Wargo (www.johnwargo.com)
+ * Forked from : Cordova-Create by John M. Wargo (www.johnwargo.com)
  * ============================================================================
  **/
 
@@ -64,6 +64,26 @@ var defaultPlatformList = (function(p) {
              : p.unknown;
 })(platformsByOS);
 
+/***
+ * Generic XML element:
+ * @property elementName {String}
+ * @property attributes  {Object with 0..n name/value pairs}
+ * @property content     {List of 0..n Strings or xmlElement objects}
+ * 
+ * This JSON representation of an XML object deliberately does not use the
+ * syntax used by the node module xml2js.  This is simply because that syntax
+ * is not so easy to write by hand.  Instead, a more intuitive syntax is used
+ * that can easily be written by the end user when editing the configuration
+ * file.  This format is translated into the syntax used by xml2js before being
+ * written back to config.xml
+ * 
+ */ 
+var xmlElement = {
+  elementName : "",
+  attributes  : {},
+  content     : []
+};
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // Build config file names and check for existence
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -78,25 +98,49 @@ var configFiles = (function(fName) {
 })(configFileName);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-// Transfer properties from source to destination object
+// Merge properties from the source object into the destination object.
+// This will either merge values read from either the global or local config
+// files into the current instance
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-var setProperties = function(src, dest, mergePlugins) {
+var mergeProperties = function(src, dest) {
   for (var p in src) {
     if (p in dest) {
-      dest[p] = (mergePlugins && p === 'pluginList' && utils.isArray(src[p]))
+      // The local pluginList and configXmlWidget values must be merged with the
+      // global values.  In all other cases, the local value overrides the global
+      // value
+      dest[p] = (utils.isArray(src[p]) &&
+                 (p === 'pluginList' || p === 'configXmlWidget'))
                 ? utils.union(dest[p], src[p])
                 : src[p];
     }
     else {
-      utils.writeToConsole('log',[["Ignoring unknown property %s".warn, p]]);
+      utils.writeToConsole('log',[["Ignoring unknown property %s in the local config file".warn, p]]);
     }
   }
+};
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Upgrade the global config file so that it contains any new properties in the
+// latest version of cva-create.
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+var upgradeGlobalConfig = function(oldGlobal, newGlobal) {
+  for (var p in newGlobal) {
+    if (!(p in oldGlobal)) {
+      // Insert the new property into the old global config object
+      oldGlobal[p] = newGlobal[p];
+    }
+  }
+  
+  return oldGlobal;
 };
 
 // ============================================================================
 // Config constructor
 // ============================================================================
-var Config = function(config_only) {
+var Config = function(action) {
+  // We start by assuming that neither the local nor global config files exist
+  // Therefore, the localConfig object will be empty and the global config
+  // object will contain the defaults from the prototype
   var localConfig  = {};
   var globalConfig = Config.prototype;
 
@@ -105,14 +149,26 @@ var Config = function(config_only) {
   // Does the global config file already exist?
   if (this.configFiles.globalConfig.exists) {
     // Yup, were we called with gen_config? 
-    if (config_only) {
+    if (action == 'gen_config') {
       // Yup, so there's nothing to do
       utils.writeToConsole('log',[["Global configuration file %s already exists", this.configFiles.globalConfig.path]]);
     }
     else {
-      // Nope, so read global config file
-      utils.writeToConsole('log',[["Reading global configuration file %s", this.configFiles.globalConfig.path]]);
+      // Nope, so read global config file, but tell the user we might be
+      // upgrading it
+      utils.writeToConsole('log',[["%sing global configuration file %s",
+                                   (action == 'upgrade_config') ? "Upgrad" : "Read",
+                                   this.configFiles.globalConfig.path]]);
       globalConfig = utils.readJSONFile(this.configFiles.globalConfig.path);      
+
+      // Are we doing an upgrade?
+      if (action == 'upgrade_config') {
+        // Yup, so the values we've read from the existing file will not contain
+        // any new properties.  Therefore, merge the new properties into the
+        // existing global config and update the file
+        globalConfig = upgradeGlobalConfig(globalConfig, this);
+        utils.writeToFile(this.configFiles.globalConfig.path, JSON.stringify(globalConfig, null, 4), 0755);
+      }
     }
   }
   else {
@@ -123,11 +179,11 @@ var Config = function(config_only) {
     this.configFiles.globalConfig.exists = true;
   }
 
-  // As long as we need to build an entire project
-  if (!config_only) {
-    // Irrespective of where the global property values came from, transfer them
-    // into the current Config instance
-    setProperties(globalConfig, this, false);
+  // Are we doing a build?
+  if (action == 'build') {
+    // Yup, so irrespective of where the global property values came from,
+    // transfer them into the current Config instance
+    mergeProperties(globalConfig, this);
     
     // Now check for the existence of a local configuration file
     if (this.configFiles.localConfig.exists) {
@@ -138,7 +194,7 @@ var Config = function(config_only) {
       utils.writeToConsole('log',[["Local configuration file not found, using global defaults instead"]]);
     }
     
-    setProperties(localConfig, this, true);
+    mergeProperties(localConfig, this);
   }
 };
 
@@ -151,14 +207,18 @@ var Config = function(config_only) {
  ['createParms',      {e:true,  w:true,  c:false, v:""}],
  ['replaceTargetDir', {e:true,  w:true,  c:false, v:false}],
  ['runPrepare',       {e:true,  w:true,  c:false, v:false}],
- ['iWindows',         {e:false, w:true,  c:false, v:utils.isWindows}],
+ ['isWindows',        {e:false, w:true,  c:false, v:utils.isWindows}],
  ['isLinux',          {e:false, w:true,  c:false, v:utils.isLinux}],
  ['isOSX',            {e:false, w:true,  c:false, v:utils.isOSX}],
  ['configFiles',      {e:false, w:false, c:false, v:configFiles}],
  ['pluginList',       {e:true,  w:true,  c:false, v:defaultPlugins}],
  ['platformList',     {e:true,  w:true,  c:false, v:defaultPlatformList}],
- ['proxy',            {e:true,  w:true,  c:false, v:proxyDef}]
+ ['proxy',            {e:true,  w:true,  c:false, v:proxyDef}],
+ ['adjustConfigXml',  {e:true,  w:true,  c:false, v:false}],
+ ['configXmlWidget',  {e:true,  w:true,  c:false, v:[xmlElement]}]
 ].map(utils.defProp,Config);
+
+
 
 // ============================================================================
 // Exports

@@ -11,7 +11,8 @@
 2. `cd <app dir>`
 3. `cordova platform add <platform names>`
 4. One or more invocations of `cordova plugin add <plugin name>`
-5. Optionally runs `cordova prepare`
+5. Optionally updates Cordova's `config.xml` file
+6. Optionally runs `cordova prepare`
 
 
 
@@ -19,7 +20,8 @@
 ##Attribution
 `cva-create` is a fork of John Wargo's [cordova-create tool](https://github.com/johnwargo/Cordova-Create).
 
-John is the author of several books on PhoneGap and Cordova such as [Apache Cordova 3 Programming](http://www.cordovaprogramming.com). For more details, see [John's web site](http://www.johnwargobooks.com).
+John is the author of several books on PhoneGap and Cordova such as [Apache Cordova 3 Programming](http://www.cordovaprogramming.com).  
+For more details, see [http://www.johnwargobooks.com].
 
 
 
@@ -59,8 +61,19 @@ Alternatively, if you've downloaded the ZIP file from GitHub, you can install th
 
 
 <a name="header5"></a>
+##Upgrade
+If you are upgrading **cva-create** from a previous version, before running a build with the new version, first run:
+
+    cva-create upgrade_config
+  
+The `upgrade_config` parameter causes any new properties used by the latest version of **cva-create** to be inserted into the existing `cva-create.json` file in your home directory.  Existing property values in `cva-create.json` will not be touched.
+
+Running `cva-create upgrade_config` will not build a Cordova project.
+
+
+<a name="header6"></a>
 ##Usage
-1. Start by creating the global configuration file.  Open a terminal window and run:
+1. If this is the first time you have used **cva-create**, then you must start by creating the global configuration file.  Open a terminal window and run:
 
     `cva-create gen_config`
   
@@ -96,12 +109,12 @@ Alternatively, if you've downloaded the ZIP file from GitHub, you can install th
 
 4. If you wish a particular project to use values other than those defined in the global configuration file, then copy the `cva-create.json` from your home directory into the local project directory and edit it to contain project specific values.
 
-  The property values in the local configuration file will now override the corresponding values in global configuration file.  See the section on [Using a Local Configuration File](#header8) for details.
+  The property values in the local configuration file will now override the corresponding values in global configuration file.  See the section on [Using a Local Configuration File](#header9) for details.
 
 
 
 
-<a name="header6"></a>
+<a name="header7"></a>
 ##Global Configuration File
 When the `cva-create` tool is run using only the `gen_config` parameter, if the file `create-cordova.json` does not exist in your home directory, then it will be created.
 
@@ -139,12 +152,20 @@ When a global configuration file is created for the first time, it will have the
           "host": "",
           "port": 0
         }
-      }
+      },
+      "adjustConfigXml": false,
+      "configXmlWidget": [
+        {
+          "elementName": "",
+          "attributes": {},
+          "content": []
+        }
+      ]
     }
 
 
 
-<a name="header7"></a>
+<a name="header8"></a>
 ##Configuration Property Names
 * `cordovaDebug : Boolean`
 
@@ -154,15 +175,11 @@ When a global configuration file is created for the first time, it will have the
 
 * `copyFrom : String`
 
-  The directory from which the contents of the `www` directory should be copied.
-  
+  The directory from which the contents of the `www` directory should be copied
+
 * `linkTo : String`
 
   The directory to which the `www` directory should be linked
-
-  If the `copyFrom` or `linkTo` properties are needed, then specify a valid directory for one of these properties, but not both!
-  If both properties point to valid directories, then the `copyFrom` property supercedes the `linkTo` property.
-  If either of these properties are blank or point to a non-existent directory, the property will be ignored.
 
 * `createParms : String`
 
@@ -178,13 +195,13 @@ When a global configuration file is created for the first time, it will have the
 
 * `pluginList : [String]`
 
-  A list containing the plugins common to all your Cordova projects.
+  An array containing the plugins common to all your Cordova projects.
 
   You can add third party plugins to this list as long as the Cordova CLI can load the plugins using the plugin's ID.  Where this won't work is for locally installed plugins.  If you want to use locally installed plugins, you will need to set a plugin search path during the call to the `cordova create` command using the `createParms` property.
 
 * `platformList : [String]`
 
-  A list containing the names of the default platforms.
+  An array containing the names of the default platforms.
 
   **Important**: The value of the default `platformList` in the global configuration file is OS dependent and is decided as follows:
 
@@ -193,16 +210,25 @@ When a global configuration file is created for the first time, it will have the
         osx     : ['android', 'ios']
         unknown : ['android']
 
-* `proxy : {Object}`
+* `proxy : Object`
 
   An object containing host name and port number for both HTTP and HTTPS proxies, and a Boolean flag to indicate whether the proxy settings should be used or not.  
   This is useful if you sometimes need to work outside a corporate network where the proxy settings are no longer needed.
+
+* `adjustConfigXml : Boolean`
+
+  A Boolean to decide whether or not the Cordova's project's `config.xml` file should be adjusted.
+
+* `configXmlWidget : [Object]`
+
+  An array of objects representing the new or updated elements within the `<widget>` element.
+
 
 To change the module's configuration, edit the file, providing your own values for the configuration options described above.
 
 
 
-<a name="header8"></a>
+<a name="header9"></a>
 ##Using a Local Configuration File
 If you choose to create a local configuration file, then:
 
@@ -216,18 +242,31 @@ The list of plugins in the local configuration file is always **added** to the l
 For instance, a local configuration file could contain the following:
 
     {
-        "cordovaDebug"     : true,
-        "linkTo"           : "./demo_www",
-        "createParms"      : "\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\"",
-        "replaceTargetDir" : true,
-        "runPrepare"       : true,
-        "platformList"     : ['ios'],
-        "pluginList" : [
-          "https://github.com/vstirbu/PromisesPlugin.git",
-          "org.apache.cordova.network-information",
-          "com.sap.mp.cordova.plugins.logon",
-          "com.sap.mp.cordova.plugins.odata"
-        ]
+      "cordovaDebug"     : true,
+      "linkTo"           : "./demo_www",
+      "createParms"      : "\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\"",
+      "replaceTargetDir" : true,
+      "runPrepare"       : true,
+      "platformList"     : ['ios'],
+      "pluginList" : [
+        "https://github.com/vstirbu/PromisesPlugin.git",
+        "org.apache.cordova.network-information",
+        "com.sap.mp.cordova.plugins.logon",
+        "com.sap.mp.cordova.plugins.odata"
+      ],
+      "adjustConfigXml": true,
+      "configXmlWidget": [
+        {
+          "elementName" : "name",
+          "attributes"  : {},
+          "content": "SD MY Contacts Fiori App"
+        },
+        {
+          "elementName" : "description",
+          "attributes"  : {},
+          "content": ["Offline version of the SD My Contacts Fiori application"]
+        }
+      ]
     }
 
 Here, the values in the global configuration file are over-ridden as follows (the order in which these properties are specified is not important):
@@ -283,6 +322,209 @@ Here, the values in the global configuration file are over-ridden as follows (th
   
   The plugins that are actually added to your application will be the sum of the global and local plugin lists (after duplicates have been removed) in which the plugin order has been preserved - global first, then local.
 
+8. `"adjustConfigXml": true`  
+   `"configXmlWidget": []`
+
+   These properties are document in the next section on [Adjusting the `config.xml` File](#header10).
+
+
+
+<a name="header10"></a>
+##Adjusting the `config.xml` File
+When a new Cordova project is created, the basic properties of that project are defined in a file called `config.xml`.
+A sample of this file looks like this:
+
+    <?xml version='1.0' encoding='utf-8'?>
+    <widget id="cus.sd.mycontacts" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+        <name>MyCordovaApp</name>
+        <description>
+            A sample Apache Cordova application that responds to the deviceready event.
+        </description>
+        <author email="dev@cordova.apache.org" href="http://cordova.io">
+            Apache Cordova Team
+        </author>
+        <content src="index.html" />
+        <access origin="*" />
+    </widget>
+
+The root element is always called `<widget>` and contains all the configurable properties for this project.  If you want to add or update the XML elements within the `<widget>` element, then these values must be defined in either the global or local configuration files.
+
+As with the list of plugins, any values found in your local configuration file will be **added** to the values (if any) found in the global configuration file.
+
+The following configuration properties must be defined:
+
+1. Setting `adjustConfigXml` to `true` instructs `cva-create` to adjust `config.xml` using the values found in the array `configXmlWidget`.  
+   Setting `adjustConfigXml` to `false` means that the default `config.xml` generated by Cordova will not be altered, even if values have been specified in the array `configXmlWidget`.
+2. In order to add or update the XML elements within the `<widget>` element, one or more JSON objects must be added to the array `configXmlWidget`.
+3. Each JSON object must have exactly the following properties - even if you do not intend to add any values to these properties:
+
+  `{
+      "elementName" : "",
+      "attributes"  : {},
+      "content"     : []
+   }`
+
+###Widget Element Usage
+
+###XML Element: No Attributes And A Simple String As Content   
+If you wish to add an XML element that does not use attributes, and contains only a string value as its content, then add the following object as an element in the `configXmlWidget` array.  The `<description>` element is a good example:
+
+    "configXmlWidget": [
+      { "elementName" : "description",
+        "attributes"  : {},
+        "content"     : ["The content property is an array containing a single string element"]
+      }
+    ]
+
+Alternatively, since the content is a simple string value, the enclosing array can be omitted:
+
+    "configXmlWidget": [
+      { "elementName" : "description",
+        "attributes"  : {},
+        "content"     : "The content property is just a string"
+      }
+    ]
+
+
+###XML Element: One Or More Attributes And A Simple String As Content   
+If you wish add an XML element that has both attributes and content, then add the following object as an element in the `configXmlWidget` array.  The `<author>` element is a good example here:
+
+    "configXmlWidget": [
+      { "elementName" : "author",
+        "attributes"  : { "email": "chris@whealy.com",
+                          "href": "http://whealy.com"
+                        },
+        "content"     : "Here's some stuff I wrote"
+      }
+    ]
+
+As above, the `content` property can be either a simple string, or an array with a string as the only element.
+
+
+###Empty XML Element: One Or More Attributes But No Content   
+If you wish to add an XML element that has attributes, but no content, then add the following as an element in the `configXmlWidget` array.  The `<preference>` XML element is a good example here.  In this case we will set the time out period for the Cordova `deviceready` event to 15 seconds.
+
+**IMPORTANT**
+
+Multiple instances of the same element are not yet supported...
+
+    "configXmlWidget": [
+      { "elementName" : "preference",
+        "attributes"  : { "name": "LoadUrlTimeoutValue",
+                          "value": "15000"
+                        },
+        "content"     : []
+      }
+    ]
+
+Each attribute name is specified as a property within the `attributes` object, and the value of each property must be a simple string.
+
+You can specify as many properties as are relevant for the particular XML element you are adjusting.
+
+Since this is an empty element, the `content` property must be set to an empty array.
+
+This will then generate the following empty XML element: `<preference name="LoadUrlTimeoutValue" value="15000"/>`
+
+
+###XML Element: One Or More Attributes And Structured Content   
+If you wish to add an XML element that has both attributes and structured (that is, non-string) content, then the `content` array property must contain one or more JSON objects of exactly the same structure used for the parent object.  A good example here is the `<feature>` element that can contain zero or more `<param>` elements:
+
+    "configXmlWidget": [
+      { "elementName" : "feature",
+        "attributes"  : { "name": "http://example.org/api/geolocation" },
+        "content"     : [
+          { "elementName" : "param",
+            "attributes"  : { "name": "accuracy",
+                              "value": "low"
+                            },
+            "content"     : []
+          }
+        ]
+      }
+    ]
+
+
+###Full Example
+If your Global Configuration file contains the following:
+
+    {
+        "cordovaDebug": false,
+        "copyFrom": "",
+        "linkTo": "",
+        "createParms": "",
+        "replaceTargetDir": false,
+        "runPrepare": false,
+        "pluginList": [
+            "org.apache.cordova.console",
+            "org.apache.cordova.dialogs",
+            "org.apache.cordova.device",
+            "org.apache.cordova.network-information"
+        ],
+        "platformList": [ "android", "ios" ],
+        "proxy": {
+            "useProxy": true,
+            "http":  { "host": "proxy.my-corp.com, "port": 8080 },
+            "https": { "host": "proxy.my-corp.com", "port": 8080 }
+        },
+        "adjustConfigXml": true,
+        "configXmlWidget": [
+          {
+            "elementName": "author",
+            "attributes": { "email": "chris@whealy.com",
+                            "href":  "http://whealy.com"
+                          },
+            "content": ["\n    Here's some stuff I wrote\n  "]
+          },
+          {
+            "elementName": "preference",
+            "attributes": { "name": "LoadUrlTimeoutValue",
+                            "value": "15000"
+                          },
+            "content": []
+          }
+        ]
+    }
+
+And your Local Configuration file contains:
+
+    {
+      "linkTo"       : "./demo_www",
+      "createParms"  : "\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\"",
+      "replaceTargetDir": false,
+      "pluginList"   : [
+          "https://github.com/vstirbu/PromisesPlugin.git",
+          "com.sap.mp.cordova.plugins.logon",
+          "com.sap.mp.cordova.plugins.odata"
+      ],
+      "adjustConfigXml": true,
+      "configXmlWidget": [
+        {
+          "elementName" : "name",
+          "attributes"  : {},
+          "content": "My Cool Cordova App"
+        },
+        {
+          "elementName" : "description",
+          "attributes"  : {},
+          "content": "This app is so cool, it can do everything except squeeze orange juice and tie shoelaces"
+        }
+      ]
+    }
+
+
+Then the adjusted `config.xml` file will look like this:
+
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <widget id="cus.sd.mycontacts" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+      <name>My Cool Cordova App</name>
+      <description>This app is so cool, it can do everything except squeeze orange juice and tie shoelaces</description>
+      <author email="chris@whealy.com" href="http://whealy.com">
+        Here's some stuff I wrote
+      </author>
+      <content src="index.html"/>
+      <access origin="*"/>
+      <preference name="LoadUrlTimeoutValue" value="15000"/>
+    </widget>
 
 
 

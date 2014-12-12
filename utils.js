@@ -4,10 +4,10 @@
  * ============================================================================
  * @fileOverview utils
  * 
- * Utility functions for the node command cordova-create 
+ * Utility functions for the node command cva-create 
  * 
  * Author      : Chris Whealy (www.whealy.com)
- * Forked from : cordova-create by John M. Wargo (www.johnwargo.com)
+ * Forked from : Cordova-Create by John M. Wargo (www.johnwargo.com)
  * ============================================================================
  **/
 
@@ -16,7 +16,7 @@ var fs      = require('fs');
 var path    = require('path');
 var shelljs = require('shelljs');
 
-var separator = "****************************************";
+var separator = "************************************************************";
 var helpFile  = 'cva-create-help.txt';
 
 // ========================================================================
@@ -40,9 +40,9 @@ var showHelp = function() {
 // ========================================================================
 var propMetadata = function(md)   {
   return {
-    enumerable   : !!md.e || false,
-    writable     : !!md.w || false,
-    configurable : !!md.c || false,
+    enumerable   : md.e || false,
+    writable     : md.w || false,
+    configurable : md.c || false,
     value        : md.v
   };
 };
@@ -56,7 +56,8 @@ var isArray = function(obj)  { return Object.prototype.toString.apply(obj) === '
 var union = function(a1, a2) {
   var a3 = a1.map(function(v) {
     return (function(i) {
-      if (i > -1) a2.splice(i,1); return v;
+      if (i > -1) a2.splice(i,1);
+      return v;
     })(a2.indexOf(v))
   });
   
