@@ -1,8 +1,27 @@
 <a name="top"></a>
 #cva-create
 
+##Table of Contents
+1. [Overview](#header1)  
+2. [Attribution](#header2)  
+3. [Requirements](#header3)  
+4. [Installation](#header4)  
+5. [Upgrade](#header5)  
+6. [Usage](#header6)  
+7. [Global Configuration File](#header7)  
+8. [Configuration Property Names](#header8)  
+9. [Using a Local Configuration File](#header9)  
+10. [Adjusting the `config.xml` File](#header10)  
+  1. [XML Element: No Attributes And A Simple String As Content](#header10_1)  
+  2. [XML Element: One Or More Attributes And A Simple String As Content](#header10_2)  
+  3. [Empty XML Element: One Or More Attributes But No Content](#header10_3)  
+  4. [XML Element: One Or More Attributes And Structured Content](#header10_4)
+  5. [Full Example](#header10_5)
+
+
+
 <a name="header1"></a>
-##Overview
+##1) Overview
 **cva-create** is a tool designed primarily to help people who regularly create Cordova applications.  If you're an occasional Cordova user, you might not find this tool so useful.
 
 **cva-create** creates a simple Cordova project for any platform and adds a configurable number of plugins.  In a single command, this tool performs the following sequence of Cordova CLI commands:
@@ -14,28 +33,33 @@
 5. Optionally updates Cordova's `config.xml` file
 6. Optionally runs `cordova prepare`
 
+[Top](#top)
 
 
 <a name="header2"></a>
-##Attribution
+##2) Attribution
 `cva-create` is a fork of John Wargo's [cordova-create tool](https://github.com/johnwargo/Cordova-Create).
 
 John is the author of several books on PhoneGap and Cordova such as [Apache Cordova 3 Programming](http://www.cordovaprogramming.com).  
 For more details, see [http://www.johnwargobooks.com].
 
+[Top](#top)
+
 
 
 <a name="header3"></a>
-##Requirements
+##3) Requirements
 This module expects the following software already to be installed, configured and working:
 
 1. An Apache Cordova development environment, including the appropriate native SDKs (Android Development Tools, Xcode etc.)
 2. NodeJS and other associated tools such as `npm`.
 
+[Top](#top)
+
 
 
 <a name="header4"></a>
-##Installation
+##4) Installation
 Install this module globally using `npm`.  From a terminal window, execute the following command:
 
 Windows:
@@ -58,10 +82,12 @@ Alternatively, if you've downloaded the ZIP file from GitHub, you can install th
   
       `sudo npm install -g`
 
+[Top](#top)
+
 
 
 <a name="header5"></a>
-##Upgrade
+##5) Upgrade
 If you are upgrading **cva-create** from a previous version, before running a build with the new version, first run:
 
     cva-create upgrade_config
@@ -70,9 +96,12 @@ The `upgrade_config` parameter causes any new properties used by the latest vers
 
 Running `cva-create upgrade_config` will not build a Cordova project.
 
+[Top](#top)
+
+
 
 <a name="header6"></a>
-##Usage
+##6) Usage
 1. If this is the first time you have used **cva-create**, then you must start by creating the global configuration file.  Open a terminal window and run:
 
     `cva-create gen_config`
@@ -111,11 +140,12 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
   The property values in the local configuration file will now override the corresponding values in global configuration file.  See the section on [Using a Local Configuration File](#header9) for details.
 
+[Top](#top)
 
 
 
 <a name="header7"></a>
-##Global Configuration File
+##7) Global Configuration File
 When the `cva-create` tool is run using only the `gen_config` parameter, if the file `create-cordova.json` does not exist in your home directory, then it will be created.
 
 If this file already exists, then it will remain unmodified.  Either way, a Cordova project will not be created.
@@ -163,10 +193,12 @@ When a global configuration file is created for the first time, it will have the
       ]
     }
 
+[Top](#top)
+
 
 
 <a name="header8"></a>
-##Configuration Property Names
+##8) Configuration Property Names
 * `cordovaDebug : Boolean`
 
   Switches on or off the Cordova `-d` flag.  With this option set to true, additional information will be written to the console as the Cordova CLI commands are executed.
@@ -226,10 +258,12 @@ When a global configuration file is created for the first time, it will have the
 
 To change the module's configuration, edit the file, providing your own values for the configuration options described above.
 
+[Top](#top)
+
 
 
 <a name="header9"></a>
-##Using a Local Configuration File
+##9) Using a Local Configuration File
 If you choose to create a local configuration file, then:
 
 1. This file must live in the directory from which the `cva-create` command is run.
@@ -327,10 +361,12 @@ Here, the values in the global configuration file are over-ridden as follows (th
 
    These properties are documented in the next section on [Adjusting the `config.xml` File](#header10).
 
+[Top](#top)
+
 
 
 <a name="header10"></a>
-##Adjusting the `config.xml` File
+##10) Adjusting the `config.xml` File
 When a new Cordova project is created, the basic properties of that project are defined in a file called `config.xml`.
 A sample of this file looks like this:
 
@@ -364,8 +400,7 @@ The following configuration properties must be defined:
       "content"     : []
     }````
 
-###Widget Element Usage
-
+<a name="header10_1"></a>
 ###XML Element: No Attributes And A Simple String As Content   
 If you wish to add an XML element that does not use attributes, and contains only a string value as its content, then add the following object as an element in the `configXmlWidget` array.  The `<description>` element is a good example:
 
@@ -386,6 +421,7 @@ Alternatively, since the content is a simple string value, the enclosing array c
     ]
 
 
+<a name="header10_2"></a>
 ###XML Element: One Or More Attributes And A Simple String As Content   
 If you wish add an XML element that has both attributes and content, then add the following object as an element in the `configXmlWidget` array.  The `<author>` element is a good example here:
 
@@ -401,6 +437,7 @@ If you wish add an XML element that has both attributes and content, then add th
 As above, the `content` property can be either a simple string, or an array with a string as the only element.
 
 
+<a name="header10_3"></a>
 ###Empty XML Element: One Or More Attributes But No Content   
 If you wish to add an XML element that has attributes, but no content, then add the following as an element in the `configXmlWidget` array.  The `<preference>` XML element is a good example here.  In this case we will set the time out period for the Cordova `deviceready` event to 15 seconds.
 
@@ -426,6 +463,7 @@ Since this is an empty element, the `content` property must be set to an empty a
 This will then generate the following empty XML element: `<preference name="LoadUrlTimeoutValue" value="15000"/>`
 
 
+<a name="header10_4"></a>
 ###XML Element: One Or More Attributes And Structured Content   
 If you wish to add an XML element that has both attributes and structured (that is, non-string) content, then the `content` array property must contain one or more JSON objects of exactly the same structure used for the parent object.  A good example here is the `<feature>` element that can contain zero or more `<param>` elements:
 
@@ -444,6 +482,7 @@ If you wish to add an XML element that has both attributes and structured (that 
     ]
 
 
+<a name="header10_5"></a>
 ###Full Example
 If your Global Configuration file contains the following:
 
@@ -525,6 +564,8 @@ Then the adjusted `config.xml` file will look like this:
       <access origin="*"/>
       <preference name="LoadUrlTimeoutValue" value="15000"/>
     </widget>
+
+[Top](#top)
 
 
 
