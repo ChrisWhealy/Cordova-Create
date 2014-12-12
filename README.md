@@ -562,7 +562,7 @@ And your Local Configuration file contains:
 Then the adjusted `config.xml` file will look like this:
 
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-    <widget id="cus.sd.mycontacts" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <widget id="mycordovaapp.mycorp.com" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
       <name>My Cool Cordova App</name>
       <description>This app is so cool, it can do everything except squeeze orange juice and tie shoelaces</description>
       <author email="chris@whealy.com" href="http://whealy.com">
@@ -579,4 +579,4 @@ Then the adjusted `config.xml` file will look like this:
 
 
 * * *
-&copy; 2014 [Chris Whealy](http://www.whealy.com)
+&copy; 2014 [Chris Whealy](http://whealy.com)
