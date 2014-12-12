@@ -1,14 +1,14 @@
 {
   "name": "cva-create",
   "description": "A node command for creating a Cordova project based on configurable parameters",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "engines": {
     "node": ">= 0.10.0"
   },
   "author": {
     "name": "Chris Whealy",
     "email": "chris@whealy.com",
-    "url": "http://www.whealy.com/"
+    "url": "http://whealy.com/"
   },
   "repository": {
     "type": "git",

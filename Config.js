@@ -138,6 +138,10 @@ var upgradeGlobalConfig = function(oldGlobal, newGlobal) {
 // Config constructor
 // ============================================================================
 var Config = function(action) {
+  utils.writeToConsole('log', [["\n%s",utils.separator.warn],
+                               ["  Assembling global and local configuration files".warn],
+                               [utils.separator.warn]]);
+
   // We start by assuming that neither the local nor global config files exist
   // Therefore, the localConfig object will be empty and the global config
   // object will contain the defaults from the prototype

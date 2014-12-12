@@ -24,8 +24,9 @@ var builder = new xml2js.Builder({rootName:'widget'});
 // ============================================================================
 var XmlConfigFile = function(targetFolder) { 
   var tempName = path.join(targetFolder,'config.xml');
-  utils.writeToConsole('log',[["\n  Adjusting %s".warn, tempName]]);
-
+  utils.writeToConsole('log',[["\n\n%s",utils.separator.warn],
+                              ["  Adjusting %s".warn, tempName],
+                              [utils.separator.warn]]);
   this.widget = {};
   this.fqFileName = '';
 
@@ -39,22 +40,27 @@ var XmlConfigFile = function(targetFolder) {
   else
     this.fqFileName = tempName;
   
-  var that = this;
+  var that      = this;
+  var xmlBuffer = fs.readFileSync(this.fqFileName);
+  
+  utils.writeToConsole('log',[["\Old config.xml".warn],
+                              [xmlBuffer.toLocaleString()]]);
 
-  parser.parseString(fs.readFileSync(this.fqFileName),
-                     function(e,r) { that.widget = r.widget; });
+  parser.parseString(xmlBuffer,function(e,r) { that.widget = r.widget; });
 };
 
 // ============================================================================
-// Define the prototype functions
+// Define a prototype function
 // ============================================================================
 XmlConfigFile.prototype.update = function(myWidget) {
   var newWidget = myWidget.reduce(makePropVal, {});
   
-  for (var p in newWidget)
-    this.widget[p] = newWidget[p];
+  for (var p in newWidget) this.widget[p] = newWidget[p];
   
-  utils.writeToFile(this.fqFileName, builder.buildObject(this.widget), 0755);
+  var newXmlFile = builder.buildObject(this.widget);
+  
+  utils.writeToConsole('log',[["\nNew config.xml".warn],[newXmlFile]]);
+  utils.writeToFile(this.fqFileName, newXmlFile, 0755);
 };
 
 // ============================================================================

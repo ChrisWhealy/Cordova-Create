@@ -110,16 +110,13 @@ var checkNpmHttpProxy  = 'npm config get proxy';
 var checkNpmHttpsProxy = 'npm config get https-proxy';
 
 var shhhh = {silent:true};
-var noop  = function(){};
 
 colors.setTheme({info:'grey',help:'green',warn:'yellow',debug:'blue',error:'red',none:'white'});
 
 // ============================================================================
 // Write out start banner
 // ============================================================================
-  utils.writeToConsole('log', [[utils.separator.help],
-                               ["Cordova Create".help],
-                               [utils.separator.help]]);
+  utils.writeStartBanner();
 
 // ============================================================================
 // Chop off the node command(s) that might be present at the start of the
@@ -140,7 +137,7 @@ var action = (userArgs[0] !== 'gen_config' &&
 // ============================================================================
 var theConfig = new app.Config(action);
 
-  // Have we just done a gen_config or an upgrade?
+  // Have we just done a gen_config or an upgrade_config?
   if (action == 'gen_config' || action == 'upgrade_config') {
     // Yup, so we're done
     process.exit(0);    
@@ -156,7 +153,8 @@ var theConfig = new app.Config(action);
       targetPlatforms = (platformArgs.length > 0) ? platformArgs : theConfig.platformList;
     }
     else {
-      utils.writeToConsole('error',[["\nMissing one or more parameters!".error], ["\nUsage: %s".warn, cmdStr]]);
+      utils.writeToConsole('error',[["\nMissing one or more parameters!".error],
+                                    ["\nUsage: %s".warn, cmdStr]]);
       utils.showHelp();
       process.exit(1);
     }
@@ -173,20 +171,24 @@ var fqTargetFolder = path.join(process.env.PWD, targetFolder);
      shelljs.rm('-rf',targetFolder);
     }
     else {
-     utils.writeToConsole('error',[["\nTarget folder %s already exists\n".error, fqTargetFolder],
-                                   [utils.separator]]);
+     utils.writeToConsole('error',[["\nTarget folder %s already exists\n".error, fqTargetFolder]]);
      process.exit(1);
     }
   }
 
 // ============================================================================
-// Check build environment
+// Check local build environment
 // ============================================================================
-var hasGit           = (shelljs.exec('git --version', shhhh).code === 0);
-var npmHttpProxySet  = (function(r) { return !(r.code === 0 && r.output.indexOf('null') === 0); })(shelljs.exec(checkNpmHttpProxy,shhhh));
-var npmHttpsProxySet = (function(r) { return !(r.code === 0 && r.output.indexOf('null') === 0); })(shelljs.exec(checkNpmHttpsProxy,shhhh));
+  utils.writeToConsole('log', [["\n%s",utils.separator.warn],
+                               ["  Checking local build environment".warn],
+                               [utils.separator.warn]]);
 
-  utils.writeToConsole('log',[['\nGIT is' + (hasGit ? ' ' : 'not ') + 'installed']]);
+var npmConfigSet     = function(r) { return !(r.code === 0 && r.output.indexOf('null') === 0); }
+var hasGit           = (shelljs.exec('git --version', shhhh).code === 0);
+var npmHttpProxySet  = npmConfigSet(shelljs.exec(checkNpmHttpProxy,shhhh));
+var npmHttpsProxySet = npmConfigSet(shelljs.exec(checkNpmHttpsProxy,shhhh));
+
+  utils.writeToConsole('log',[['GIT is' + (hasGit ? ' ' : 'not ') + 'installed']]);
   utils.writeToConsole('log',[['npm HTTP proxy is ' + (npmHttpProxySet ? 'set' : 'unset')]]);
   utils.writeToConsole('log',[['npm HTTPS proxy is ' + (npmHttpsProxySet ? 'set' : 'unset')]]);
 
@@ -232,9 +234,9 @@ var setProxy = (function(pConf) {
     writeToConsole('error',[["Error: Either set proxy.useProxy to false or define a proxy host and port number"]]);
     process.exit(1);
   }
-
-  var httpProxy  = 'http://'  + pConf.http.host  + ':' + pConf.http.port;
-  var httpsProxy = 'https://' + pConf.https.host + ':' + pConf.https.port;
+  
+  var httpProxy  = 'http://'  + pConf.http.host  + ':' + (pConf.http.port || 80);
+  var httpsProxy = 'https://' + pConf.https.host + ':' + (pConf.https.port || 443);
   
   var npmCmdPrefix = 'npm config ' + ((pConf.useProxy) ? 'set ' : 'delete ');
   var npmCmdHttp   = npmCmdPrefix + 'proxy '       + ((pConf.useProxy) ? httpProxy : '');
@@ -246,12 +248,16 @@ var setProxy = (function(pConf) {
 
   // On *NIX boxes, do I need to care about writing the proxy settings to ~/.plugman/config?
   return function() {
-           utils.writeToConsole('log',[['\nUpdating npm proxy server settings'.warn], [npmCmdHttp]]);
+           utils.writeToConsole('log',[['\nUpdating npm proxy server settings'.warn],
+                                       [npmCmdHttp],
+                                       [npmCmdHttps]]);
            shelljs.exec(npmCmdHttp,shhhh);
            shelljs.exec(npmCmdHttps,shhhh);
 
            if (hasGit) {
-             utils.writeToConsole('log',[['\nUpdating proxy servers for GIT'.warn], [gitCmdHttp],[gitCmdHttps],[utils.separator]]);
+             utils.writeToConsole('log',[['\nUpdating proxy servers for GIT'.warn],
+                                         [gitCmdHttp],
+                                         [gitCmdHttps]]);
              shelljs.exec(gitCmdHttp);
              shelljs.exec(gitCmdHttps);
            };
@@ -266,7 +272,9 @@ var setProxy = (function(pConf) {
   buildInstructions.addInstruction(setProxy,[theConfig.proxy]);
 
 // Create Cordova project
-  buildInstructions.addInstruction(utils.writeToConsole, ['log',[["\n\nCreating project".warn]]]);
+  buildInstructions.addInstruction(utils.writeToConsole, ['log',[["\n\n%s",utils.separator.warn],
+                                                                 ["  Creating project".warn],
+                                                                 [utils.separator.warn]]]);
   buildInstructions.addInstruction(execCvaCmd,['create ' + targetFolder + ' ' + appID + ' "' + appName + '" ' + theConfig.createParms + cmdSuffix]);
 
 // Change into the target folder directory
@@ -308,7 +316,7 @@ var setProxy = (function(pConf) {
   
 // Optionally run "cordova prepare"
   if (theConfig.runPrepare) {
-    utils.writeToConsole('log',[["\n  Running cordova prepare".warn]]);
+    utils.writeToConsole('log',[["\nRunning cordova prepare".warn]]);
     execCvaCmd('prepare');
   }
   

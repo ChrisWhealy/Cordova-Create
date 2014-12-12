@@ -73,6 +73,12 @@ var writeToConsole = function(fn,consoleMessages) {
   consoleMessages.map(function(msg) { console[fn].apply(this, msg); });
 };
 
+var writeStartBanner = function() {
+  writeToConsole('log', [[separator.help],
+                         ["*                   C V A - C R E A T E                    *".help],
+                         [separator.help]]);
+}
+
 // ========================================================================
 // Functions for file management
 // ========================================================================
@@ -123,4 +129,5 @@ module.exports.writeToConsole     = writeToConsole;
 module.exports.setFilePermissions = setFilePermissions;
 module.exports.readJSONFile       = readJSONFile;
 module.exports.writeToFile        = writeToFile;
+module.exports.writeStartBanner   = writeStartBanner;
 
