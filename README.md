@@ -358,11 +358,11 @@ The following configuration properties must be defined:
 2. In order to add or update the XML elements within the `<widget>` element, one or more JSON objects must be added to the array `configXmlWidget`.
 3. Each JSON object must have exactly the following properties - even if you do not intend to add any values to these properties:
 
-    {
+    ````{
       "elementName" : "",
       "attributes"  : {},
       "content"     : []
-    }
+    }````
 
 ###Widget Element Usage
 
