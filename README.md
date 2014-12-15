@@ -296,8 +296,8 @@ For instance, a local configuration file could contain the following:
       "platformList"     : ['ios'],
       "pluginList" : [
         "https://github.com/vstirbu/PromisesPlugin.git",
-        "com.sap.mp.cordova.plugins.logon",
-        "com.sap.mp.cordova.plugins.odata"
+        "com.3rd-party.plugins.do-this",
+        "com.3rd-party.plugins.do-that"
       ],
       "adjustConfigXml": true,
       "configXmlWidget": [
@@ -358,8 +358,8 @@ Here, the values in the global configuration file are over-ridden as follows (th
 
 7. ```"pluginList": [  
       "https://github.com/vstirbu/PromisesPlugin.git",  
-      "com.sap.mp.cordova.plugins.logon",  
-      "com.sap.mp.cordova.plugins.odata"  
+      "com.3rd-party.plugins.do-that",  
+      "com.3rd-party.plugins.do-that"  
     ]```
 
   This list of plugins is used to extend the list of plugins found in the global configuration file.
@@ -534,7 +534,7 @@ If your Global Configuration file contains the following:
           },
           {
             "elementName": "preference",
-            "attributes": { "name": "LoadUrlTimeoutValue",
+            "attributes": { "name": "loadUrlTimeoutValue",
                             "value": "15000"
                           },
             "content": []
@@ -550,8 +550,8 @@ And your Local Configuration file contains:
       "replaceTargetDir": false,
       "pluginList"   : [
           "https://github.com/vstirbu/PromisesPlugin.git",
-          "com.sap.mp.cordova.plugins.logon",
-          "com.sap.mp.cordova.plugins.odata"
+          "com.3rd-party.plugins.do-that",
+          "com.3rd-party.plugins.do-that"
       ],
       "adjustConfigXml": true,
       "configXmlWidget": [
@@ -580,7 +580,7 @@ Then the adjusted `config.xml` file will look like this:
       </author>
       <content src="index.html"/>
       <access origin="*"/>
-      <preference name="LoadUrlTimeoutValue" value="15000"/>
+      <preference name="loadUrlTimeoutValue" value="15000"/>
     </widget>
 
 [Top](#top)
