@@ -22,7 +22,7 @@
 
 <a name="header1"></a>
 ##1) Overview
-**cva-create** is a tool designed primarily to help people who regularly create Cordova applications.  If you're an occasional Cordova user, you might not find this tool so useful.
+**cva-create** is a tool designed primarily to help people who regularly create Cordova projects.  If you're an occasional Cordova user, you might not find this tool so useful.
 
 **cva-create** creates a simple Cordova project for any platform and adds a configurable number of plugins.  In a single command, this tool performs the following sequence of Cordova CLI commands:
 
@@ -106,7 +106,7 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
     `cva-create gen_config`
   
-   Using the `gen_config` parameter will not cause a Cordova project to be built.  Instead it will simply create a file called `cva-create.json` in your home directory.  This file contains a set of parameters that will be used as default values when `cva-create` builds a Cordova application.
+   Using the `gen_config` parameter will not cause a Cordova project to be built.  Instead it will simply create a file called `cva-create.json` in your home directory.  This file contains a set of parameters that will be used as default values when `cva-create` builds a Cordova project.
 
 2. Edit `cva-create.json` as appropriate for your situation.
 
@@ -152,7 +152,7 @@ If this file already exists, then it will remain unmodified.  Either way, a Cord
 
 On Windows you can find the global configuration file in the directory `c:\users\<user_name>` (replacing `<user_name>` with the logon name of the current user).
 
-On Mac OS X, this file is located in the user's home directory at /Users/`<user_name>` (again replacing `<user_name>` with the current user's logon name).
+On Mac OS X, this file is located in the user's home directory at `/Users/<user_name>` (again replacing `<user_name>` with the current user's logon name).
 
 When a global configuration file is created for the first time, it will have the following content:
 
@@ -207,11 +207,23 @@ When a global configuration file is created for the first time, it will have the
 
 * `copyFrom : String`
 
-  The directory from which the contents of the `www` directory should be copied
+  The directory from which the contents of the `www` directory should be copied.
 
 * `linkTo : String`
 
-  The directory to which the `www` directory should be linked
+  The directory to which the `www` directory should be linked.
+  
+  **NOTE**
+  
+  It makes no sense to supply pathname values for both the `copyFrom` *and* `linkTo` properties.  You should specify one, or the other, but not both.
+  
+  If values are given for both parameters, then the following logic is used:
+  
+        Does the directory name specified in "copyFrom" exist?
+          Yes --> Use this value for the --copyFrom parameter
+          No  --> Does the directory name in "linkTo" exist?
+                  Yes --> Use this value for --linkTo parameter
+                  No  --> Use neither the --copyFrom nor --linkTo parameters
 
 * `createParms : String`
 
@@ -352,7 +364,7 @@ Here, the values in the global configuration file are over-ridden as follows (th
 
   This list of plugins is used to extend the list of plugins found in the global configuration file.
   
-  The plugins that are actually added to your application will be the sum of the global and local plugin lists (after duplicates have been removed) in which the plugin order has been preserved - global first, then local.
+  The plugins that are actually added to your project will be the sum of the global and local plugin lists (after duplicates have been removed) in which the plugin order has been preserved - global first, then local.
 
 8. `"adjustConfigXml": true`  
    `"configXmlWidget": []`
@@ -451,7 +463,7 @@ Multiple instances of the same element are not yet supported...
 
     "configXmlWidget": [
       { "elementName" : "preference",
-        "attributes"  : { "name": "LoadUrlTimeoutValue",
+        "attributes"  : { "name": "loadUrlTimeoutValue",
                           "value": "15000"
                         },
         "content"     : []
@@ -464,7 +476,7 @@ You can specify as many properties as are relevant for the particular XML elemen
 
 Since this is an empty element, the `content` property must be set to an empty array.
 
-This will then generate the following empty XML element: `<preference name="LoadUrlTimeoutValue" value="15000"/>`
+This will then generate the following empty XML element: `<preference name="loadUrlTimeoutValue" value="15000"/>`
 
 
 <a name="header10_4"></a>

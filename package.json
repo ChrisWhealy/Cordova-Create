@@ -1,7 +1,7 @@
 {
   "name": "cva-create",
   "description": "A node command for creating a Cordova project based on configurable parameters",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "engines": {
     "node": ">= 0.10.0"
   },

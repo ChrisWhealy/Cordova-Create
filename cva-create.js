@@ -219,11 +219,25 @@ buildInstructions.addInstruction = function(fn,p) { this.push({fn:fn, p:p}) };
 // If both the copyFrom and linkTo properties are set to valid directories,
 // then apart from being a nonsensical combination of configuration values,
 // we will arbitrarily use copyFrom in preference to linkTo
-var cmdSuffix = (fs.existsSync(theConfig.copyFrom))
+var copyFromExists = fs.existsSync(theConfig.copyFrom);
+var linkToExists   = fs.existsSync(theConfig.linkTo);
+
+var logMsg = [];
+
+var cmdSuffix = (copyFromExists) 
                 ? ' --copy-from "' + theConfig.copyFrom + '"'
-                : (fs.existsSync(theConfig.linkTo))
+                : (linkToExists)
                   ? ' --link-to "' + theConfig.linkTo + '"'
                   : '';
+               
+  if (theConfig.copyFrom && !copyFromExists)
+    logMsg.push(['Ignoring the value of the copyFrom property. %s does not exist',theConfig.copyFrom]);
+
+  if (theConfig.linkTo && !linkToExists)
+    logMsg.push(['Ignoring the value of the linkTo property. %s does not exist.',theConfig.linkTo]);
+
+  if (logMsg.length > 0)
+    utils.writeToConsole('warn',logMsg);
 
 // ============================================================================
 // Define npm and GIT proxy settings
@@ -235,8 +249,8 @@ var setProxy = (function(pConf) {
     process.exit(1);
   }
   
-  var httpProxy  = 'http://'  + pConf.http.host  + ':' + (pConf.http.port || 80);
-  var httpsProxy = 'https://' + pConf.https.host + ':' + (pConf.https.port || 443);
+  var httpProxy  = 'http://' + pConf.http.host  + ':' + (pConf.http.port || 80);
+  var httpsProxy = 'http://' + pConf.https.host + ':' + (pConf.https.port || 443);
   
   var npmCmdPrefix = 'npm config ' + ((pConf.useProxy) ? 'set ' : 'delete ');
   var npmCmdHttp   = npmCmdPrefix + 'proxy '       + ((pConf.useProxy) ? httpProxy : '');
