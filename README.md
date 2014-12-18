@@ -217,7 +217,7 @@ When a global configuration file is created for the first time, it will have the
   
   It makes no sense to supply pathname values for both the `copyFrom` *and* `linkTo` properties.  You should specify one, or the other, but not both.
   
-  If values are given for both parameters, then the following logic is used:
+  However, if values are given for both parameters, then the following logic is used:
   
         Does the directory name specified in "copyFrom" exist?
           Yes --> Use this value for the --copyFrom parameter
@@ -354,13 +354,13 @@ Here, the values in the global configuration file are over-ridden as follows (th
 
 6. `"platformList": ['ios']`
 
-   We want to create only an ios project.
+   We want to create only an iOS project.
 
-7. ```"pluginList": [  
-      "https://github.com/vstirbu/PromisesPlugin.git",  
-      "com.3rd-party.plugins.do-that",  
-      "com.3rd-party.plugins.do-that"  
-    ]```
+7. `"pluginList": [
+      "https://github.com/vstirbu/PromisesPlugin.git",
+      "com.3rd-party.plugins.do-that",
+      "com.3rd-party.plugins.do-that"
+    ]`
 
   This list of plugins is used to extend the list of plugins found in the global configuration file.
   
@@ -404,11 +404,11 @@ The following configuration properties must be defined:
 2. In order to add or update the XML elements within the `<widget>` element, one or more JSON objects must be added to the array `configXmlWidget`.
 3. Each JSON object must have exactly the following properties - even if you do not intend to add any values to these properties:
 
-    ````{
-      "elementName" : "",  
-      "attributes"  : {},  
-      "content"     : []  
-    }````
+    `{
+      "elementName" : "",
+      "attributes"  : {},
+      "content"     : []
+    }`
 
 <a name="header10_1"></a>
 ###XML Element: No Attributes And A Simple String As Content   
@@ -441,9 +441,7 @@ The `<author>` element is a good example here:
 
     "configXmlWidget": [
       { "elementName" : "author",
-        "attributes"  : { "email": "chris@whealy.com",
-                          "href": "http://whealy.com"
-                        },
+        "attributes"  : { "email": "chris@whealy.com", "href": "http://whealy.com" },
         "content"     : "Here's some stuff I wrote"
       }
     ]
@@ -457,15 +455,9 @@ If you wish to add an XML element that has attributes, but no content, then add 
 
 The `<preference>` XML element is a good example here.  In this case we will set the time out period for the Cordova `deviceready` event to 15 seconds.
 
-**IMPORTANT**
-
-Multiple instances of the same element are not yet supported...
-
     "configXmlWidget": [
       { "elementName" : "preference",
-        "attributes"  : { "name": "loadUrlTimeoutValue",
-                          "value": "15000"
-                        },
+        "attributes"  : { "name": "loadUrlTimeoutValue", "value": "15000" },
         "content"     : []
       }
     ]
@@ -476,7 +468,24 @@ You can specify as many properties as are relevant for the particular XML elemen
 
 Since this is an empty element, the `content` property must be set to an empty array.
 
-This will then generate the following empty XML element: `<preference name="loadUrlTimeoutValue" value="15000"/>`
+If multiple preference elements are needed, then simply repeat the object definition.
+
+    "configXmlWidget": [
+      { "elementName" : "preference",
+        "attributes"  : { "name": "loadUrlTimeoutValue", "value": "15000" },
+        "content"     : []
+      },
+      { "elementName" : "preference",
+        "attributes"  : { "name": "Squeeze", "value": "Orange Juice" },
+        "content"     : []
+      },
+      { "elementName" : "preference",
+        "attributes"  : { "name": "Tie", "value": "Shoelaces" },
+        "content"     : []
+      }
+    ]
+
+
 
 
 <a name="header10_4"></a>
@@ -490,9 +499,7 @@ The `<feature>` element is a good example, since it can contain zero or more `<p
         "attributes"  : { "name": "http://example.org/api/geolocation" },
         "content"     : [
           { "elementName" : "param",
-            "attributes"  : { "name": "accuracy",
-                              "value": "low"
-                            },
+            "attributes"  : { "name": "accuracy", "value": "low" },
             "content"     : []
           }
         ]
@@ -527,16 +534,12 @@ If your Global Configuration file contains the following:
         "configXmlWidget": [
           {
             "elementName": "author",
-            "attributes": { "email": "chris@whealy.com",
-                            "href":  "http://whealy.com"
-                          },
+            "attributes": { "email": "chris@whealy.com", "href":  "http://whealy.com" },
             "content": ["\n    Here's some stuff I wrote\n  "]
           },
           {
             "elementName": "preference",
-            "attributes": { "name": "loadUrlTimeoutValue",
-                            "value": "15000"
-                          },
+            "attributes": { "name": "loadUrlTimeoutValue", "value": "15000" },
             "content": []
           }
         ]

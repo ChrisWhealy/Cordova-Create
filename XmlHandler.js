@@ -34,7 +34,7 @@ var XmlConfigFile = function(targetFolder) {
   if (!fs.existsSync(tempName)) {
     utils.writeToConsole('error',
         [["\nconfig.xml cannot be found in directory %s".error, targetFolder],
-         ["Looks like the Cordova project was not generated correctly"]]);
+         ["Looks like the Cordova project was not created correctly"]]);
     process.exit(1);
   }
   else
@@ -67,37 +67,43 @@ XmlConfigFile.prototype.update = function(myWidget) {
 // Private API
 // ============================================================================
 var makePropVal = function(acc, v) {
-  if (v.elementName != "")
-    acc[v.elementName] = makeSimpleVal(v);
+  if (v.elementName != "") {
+    if (!acc[v.elementName]) acc[v.elementName] = [];
+
+    acc[v.elementName].push(makeSimpleVal(v));
+  }
+
   return acc;
 }
 
 var makeSimpleVal = function(v) {
 // First, handle the simple case of an element that has only string content
 // and no attributes.
-// All other cases are delegated to the function reduceListToObj
-  return [(Object.keys(v.attributes).length > 0)
-          ? reduceListToObj(v,true)
-          : (typeof v.content === 'string')
-            ? v.content
-            : (typeof v.content[0] === 'string')
-              ? v.content[0]
-              : reduceListToObj(v,false)];
+// All other cases are delegated to the function arrayToObj
+  return (Object.keys(v.attributes).length > 0)
+         ? arrayToObj(v,true)
+         : (typeof v.content === 'string')
+           ? v.content
+           : (typeof v.content[0] === 'string')
+             ? v.content[0]
+             : arrayToObj(v,false);
 }
 
-var reduceListToObj = function(v,hasAttribs) {
+var arrayToObj = function(v,hasAttribs) {
   var temp = {};
   
   // If present, attributes belong to a property called "$"
   if (hasAttribs) temp["$"] = v.attributes;
 
-  // If present, unnamed content is stored in a property called "_"
+  // If present, unnamed content belongs to a property called "_"
   if (typeof v.content === 'string' || typeof v.content[0] === 'string')
     temp["_"] = (typeof v.content === 'string') ? v.content : v.content[0];
   else
-    // The element contains more elements
-    for (var i=0; i<v.content.length; i++)
-      temp[v.content[i].elementName] = makeSimpleVal(v.content[i]);
+    // The element content contains nested elements
+    for (var i=0; i<v.content.length; i++) {
+      temp[v.content[i].elementName] = [];
+      temp[v.content[i].elementName].push(makeSimpleVal(v.content[i]));
+    }
 
   return temp;
 }

@@ -124,13 +124,8 @@ var mergeProperties = function(src, dest) {
 // latest version of cva-create.
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 var upgradeGlobalConfig = function(oldGlobal, newGlobal) {
-  for (var p in newGlobal) {
-    if (!(p in oldGlobal)) {
-      // Insert the new property into the old global config object
-      oldGlobal[p] = newGlobal[p];
-    }
-  }
-  
+  for (var p in newGlobal) if (!(p in oldGlobal)) oldGlobal[p] = newGlobal[p];
+
   return oldGlobal;
 };
 
@@ -139,7 +134,7 @@ var upgradeGlobalConfig = function(oldGlobal, newGlobal) {
 // ============================================================================
 var Config = function(action) {
   utils.writeToConsole('log', [["\n%s",utils.separator.warn],
-                               ["  Assembling global and local configuration files".warn],
+                               ["  Building runtime configuration from global and local configuration files".warn],
                                [utils.separator.warn]]);
 
   // We start by assuming that neither the local nor global config files exist
@@ -152,14 +147,15 @@ var Config = function(action) {
   
   // Does the global config file already exist?
   if (this.configFiles.globalConfig.exists) {
-    // Yup, were we called with gen_config? 
+    // Yup, so check if we were called with the gen_config parameter?
     if (action == 'gen_config') {
       // Yup, so there's nothing to do
-      utils.writeToConsole('log',[["Global configuration file %s already exists", this.configFiles.globalConfig.path]]);
+      utils.writeToConsole('log',[["Global configuration file %s already exists", this.configFiles.globalConfig.path],
+                                  ["No further action taken.\n"]]);
     }
     else {
-      // Nope, so read global config file, but tell the user we might be
-      // upgrading it
+      // Nope, so read global config file, but tell the user that a possible
+      // upgrade might take place
       utils.writeToConsole('log',[["%sing global configuration file %s",
                                    (action == 'upgrade_config') ? "Upgrad" : "Read",
                                    this.configFiles.globalConfig.path]]);

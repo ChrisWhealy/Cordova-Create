@@ -57,9 +57,8 @@
  *         applicable to all Cordova projects such as a list of default plugins
  *         and possibly proxy server settings.
  *
- *         2.1.1) If the global configuration file cannot be found due to the
- *                fact that the user's home directory cannot be identified,
- *                then throw toys out pram and give up.
+ *         2.1.1) If the user's home directory cannot be identified, then throw
+ *                toys out pram and give up.
  *         2.1.2) If the global configuration file does not exist in the user's
  *                home directory, then create this file using the default values
  *                hard-coded in this program.
@@ -93,7 +92,8 @@
  *    3.1) Run "cordova create" using the command line arguments as parameters
  *    3.2) Run "cordova platform add" for the required platforms
  *    3.3) Run "cordova plugin add" for each of the specified plugins
- *    3.4) Optionally run "cordova prepare" 
+ *    3.4) Optionally adjust the config.xml file
+ *    3.5) Optionally run "cordova prepare" 
  *
  **/
 
@@ -164,7 +164,7 @@ var theConfig = new app.Config(action);
 // Check the target folder
 // ============================================================================
 var fqTargetFolder = path.join(process.env.PWD, targetFolder);
-  
+
   if (fs.existsSync(fqTargetFolder)) {
     if (theConfig.replaceTargetDir) {
      utils.writeToConsole('log',[["\nReplacing target folder %s".warn, fqTargetFolder]]);
@@ -196,7 +196,7 @@ var npmHttpsProxySet = npmConfigSet(shelljs.exec(checkNpmHttpsProxy,shhhh));
 // Define how to execute a Cordova command
 // ============================================================================
 var cordovaCmd = (function(isDebug) {
-  utils.writeToConsole('log',[["\nCordova debug mode is " + ((isDebug) ? "en" : "dis")+ "abled"]]);
+  utils.writeToConsole('log',[["\nCordova debug mode is " + ((isDebug) ? "en" : "dis") + "abled"]]);
   return 'cordova' + ((isDebug) ? ' -d ' : ' ');
 })(theConfig.cordovaDebug);
   
