@@ -16,7 +16,13 @@
   2. [XML Element: One Or More Attributes And A Simple String As Content](#header10_2)  
   3. [Empty XML Element: One Or More Attributes But No Content](#header10_3)  
   4. [XML Element: One Or More Attributes And Structured Content](#header10_4)
-  5. [Full Example](#header10_5)
+11. [Using Place Holders In `config.xml` Attributes and Content](#header11)  
+  1. [Place Holder Syntax](#header11_1)  
+  2. [Place Holder Usage](#header11_2)  
+  3. [Simple Example](#header11_3)  
+  4. [Mulitple Place Holders](#header11_4)  
+  5. [Place Holder Reference Errors](#header11_5)  
+12. [Full Example](#header10_5)
 
 
 
@@ -40,8 +46,7 @@
 ##2) Attribution
 `cva-create` is a fork of John Wargo's [cordova-create tool](https://github.com/johnwargo/Cordova-Create).
 
-John is the author of several books on PhoneGap and Cordova such as [Apache Cordova 3 Programming](http://www.cordovaprogramming.com).  
-For more details, see [http://www.johnwargobooks.com].
+John is the author of several books on PhoneGap and Cordova such as [Apache Cordova 3 Programming](http://www.cordovaprogramming.com). For more details, see [http://www.johnwargobooks.com].
 
 [Top](#top)
 
@@ -49,7 +54,7 @@ For more details, see [http://www.johnwargobooks.com].
 
 <a name="header3"></a>
 ##3) Requirements
-This module expects the following software already to be installed, configured and working:
+This module expects the following software to be already installed, configured and working:
 
 1. An Apache Cordova development environment, including the appropriate native SDKs (Android Development Tools, Xcode etc.)
 2. NodeJS and other associated tools such as `npm`.
@@ -108,7 +113,7 @@ Running `cva-create upgrade_config` will not build a Cordova project.
   
    Using the `gen_config` parameter will not cause a Cordova project to be built.  Instead it will simply create a file called `cva-create.json` in your home directory.  This file contains a set of parameters that will be used as default values when `cva-create` builds a Cordova project.
 
-2. Edit `cva-create.json` as appropriate for your situation.
+2. Edit `cva-create.json` in your home directory as appropriate for your situation.
 
   For instance, if your apps always use the plugin `org.apache.cordova.network-information`, then adding this string to the list of plugins will mean it is automatically added to all projects built by `cva-create`.
 
@@ -124,7 +129,7 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
   * `<app name>` is the name of the application seen by the user of the mobile device.
 
-  * `<platform names>` is an optional set of target platforms. If this list is omitted, then the default platforms listed in the Global Configuration file will be used instead.
+  * `<platform names>` is an optional set of target platforms. If this list is omitted, then `cva-create` will look first at the default platforms listed in the Global Configuration file.  If any platforms are listed in the Local Configuration files, then the local values take precedence over the global values.
     
   The first three parameters are the same as would be used with the Cordova CLI command `cordova create`.
 
@@ -146,7 +151,7 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
 <a name="header7"></a>
 ##7) Global Configuration File
-When the `cva-create` tool is run using only the `gen_config` parameter, if the file `create-cordova.json` does not exist in your home directory, then it will be created.
+When the `cva-create` tool is run using only the `gen_config` parameter, if the file `create-cordova.json` does not exist in your home directory, then it will be created with default values.
 
 If this file already exists, then it will remain unmodified.  Either way, a Cordova project will not be created.
 
@@ -154,7 +159,7 @@ On Windows you can find the global configuration file in the directory `c:\users
 
 On Mac OS X, this file is located in the user's home directory at `/Users/<user_name>` (again replacing `<user_name>` with the current user's logon name).
 
-When a global configuration file is created for the first time, it will have the following default content:
+When a global configuration file is created for the first time on a Mac, it will have the following default content:
 
     {
       "cordovaDebug": false,
@@ -193,6 +198,8 @@ When a global configuration file is created for the first time, it will have the
       ]
     }
 
+If you are running on some other operating system, then the only difference will be the list of [default platforms](#header8_1) since this is OS specific.
+
 [Top](#top)
 
 
@@ -213,11 +220,9 @@ When a global configuration file is created for the first time, it will have the
 
   The directory to which the `www` directory should be linked.
   
-  **NOTE**
+  **NOTE:**  It makes no sense to supply pathnames for both the `copyFrom` *and* `linkTo` properties.  You should specify one, or the other, but not both.
   
-  It makes no sense to supply pathnames for both the `copyFrom` *and* `linkTo` properties.  You should specify one, or the other, but not both.
-  
-  However, if you do supply pathnames for *both* parameters, then the following logic is used:
+  However, if you are feeling particularly over zealous and supply pathnames for *both* parameters, then the following logic is used:
   
         Does the directory name specified in "copyFrom" exist?
           Yes --> Use this value for the --copyFrom parameter and ignore the "linkTo" property
@@ -231,7 +236,7 @@ When a global configuration file is created for the first time, it will have the
 
 * `replaceTargetDir : Boolean`
 
-  If the target directory for this Cordova project already exists, should it be deleted and recreated?
+  If the target directory for this Cordova project already exists, should it be deleted and recreated?  **Use with care!**
 
 * `runPrepare : Boolean`
 
@@ -243,6 +248,7 @@ When a global configuration file is created for the first time, it will have the
 
   You can add third party plugins to this list as long as the Cordova CLI can load the plugins using the plugin's ID.  Where this won't work is for locally installed plugins.  If you want to use locally installed plugins, you will need to set a plugin search path during the call to the `cordova create` command using the `createParms` property.
 
+<a name="header8_1"></a>
 * `platformList : [String]`
 
   An array containing the names of the default platforms.
@@ -256,12 +262,13 @@ When a global configuration file is created for the first time, it will have the
 
 * `proxy : Object`
 
-  An object containing host name and port number for both HTTP and HTTPS proxies, and a Boolean flag to indicate whether the proxy settings should be used or not.  
+  An object containing host name and port number for both HTTP and HTTPS proxies, and a Boolean flag to indicate whether the proxy settings should be used or not.
+  
   Switching the use of a proxy server on or off is useful if you sometimes need to work outside a corporate network where the proxy settings are no longer needed.
 
 * `adjustConfigXml : Boolean`
 
-  A Boolean to decide whether or not the Cordova's project's `config.xml` file should be adjusted.
+  A Boolean to indicate whether or not the Cordova's project's `config.xml` file should be adjusted.
 
 * `configXmlWidget : [Object]`
 
@@ -463,9 +470,9 @@ Each attribute name is specified as a property within the `attributes` object, a
 
 You can specify as many properties as are relevant for the particular XML element you are adjusting.
 
-Since this is an empty element, the `content` property must be set to an empty array, **not** and empty string.
+Since this is an empty element, the `content` property must be set to an empty array, **not** an empty string.
 
-If multiple instances of the same elements are needed, then simply repeat the element definition.  For example, in order to have multiple `<preference>` elements, specify:
+If multiple instances of the same element are needed, then simply repeat the element definition.  For example, in order to have multiple `<preference>` elements, you can specify something like:
 
     "configXmlWidget": [
       { "elementName" : "preference",
@@ -473,11 +480,11 @@ If multiple instances of the same elements are needed, then simply repeat the el
         "content"     : []
       },
       { "elementName" : "preference",
-        "attributes"  : { "name": "Squeeze", "value": "Orange Juice" },
+        "attributes"  : { "Squeeze": "Orange Juice" },
         "content"     : []
       },
       { "elementName" : "preference",
-        "attributes"  : { "name": "Tie", "value": "Shoelaces" },
+        "attributes"  : { "Tie": "Shoelaces" },
         "content"     : []
       }
     ]
@@ -504,9 +511,75 @@ The `<feature>` element is a good example, since it can contain zero or more `<p
     ]
 
 
-<a name="header10_5"></a>
-###Full Example
-If your Global Configuration file contains the following:
+
+<a name="header11"></a>
+##11) Using Place Holders In `config.xml` Attributes and Content
+Generally speaking, most attribute values used by the XML elements in `config.xml` are simple string or Boolean values.  However, there are various attributes that often need to be set equal to values that have already been defined somewhere else.
+
+A typical example is for the attributes and content of the `<author>` element.  Here, you might want to set the email address and URL equal to values that you already defined when you set up either `npm` or `git`.
+
+<a name="header11_1"></a>
+###11.1) Place Holder Syntax
+Instead of repeating a value defined elsewhere, you can reference it using a place holder.  Three place holders are recognised:
+
+`$git()` - Reference a `git` variable  
+`$npm()` - Reference an `npm` variable  
+`$env()` - Reference an environment variable available to NodeJS via its `process.env` object
+
+<a name="header11_2"></a>
+###11.2) Place Holder Usage
+Only the XML attributes `email` and `href` will be parsed for place holders; however, if the content of an XML element is a simple string value, then this string value may contain any number of place holders.
+
+If, for instance, you want to pick up the value of the `git` variable `user.email`, simply use the following string somewhere inside the attribute or content string value:
+
+    $git(user.email)
+
+Similarly, `npm` variables such as `init.author.url` are referenced as follows:
+
+    $npm(init.author.url)
+
+Finally, to pick up the value of an environment variable, use:
+
+    $env(USER)
+
+<a name="header11_3"></a>
+###11.3) Simple Example
+Using the above information, you could now define the `<author>` element of `config.xml` something like this:
+
+    {
+      "elementName": "author",
+      "attributes": { "email": "$git(user.email)",
+                      "href":  "$npm(init.author.url)" },
+      "content": ["\n    Written by $env(USER)    \n  "]
+    },
+
+
+<a name="header11_4"></a>
+###11.4) Multiple Place Holders
+You can add as many place holders as you like within a single string value.  So for instance, you might choose to define the content of the `<author>` element like this:
+
+    "content": ["Written by $env(USER), better known as $npm(init.author.name) and whose email address is either $git(user.email) or $npm(init.author.email)"]
+
+Assuming you have referenced an existing variable, all place holders will be substituted with the referenced variable's current runtime value.
+
+
+<a name="header11_5"></a>
+###11.5) Place Holder Reference Errors
+**IMPORTANT**
+
+1. If you reference a variable name that does not exist, then the place holder will be replaced with an empty string.
+2. On *NIX machines, all place holder names are case-sensitive!
+3. When using the `$env()` place holder to reference environment variables, you may only specify variables that NodeJS can access via its `process.env` object.  This is usually a smaller list than is displayed if you type `set` from a command prompt.
+
+
+
+<a name="header12"></a>
+##12) Full Example
+Here is full (if somewhat excessive) example.  In this example, the Global Configuration file contains the information shown below.  The list of default plugins has been extended, a proxy server is being used, and the `config.xml` file is being adjusted in the following way:
+
+Both the attributes and the content of the `<author>` element contain various place holders that will be substituted for the current runtime values of variables obtained from `git`, `npm` and the operating system environment.
+
+Two `<preference>` attributes are added as is a `<feature>` element that contains a child `<param>` element.
 
     {
         "cordovaDebug": false,
@@ -531,18 +604,36 @@ If your Global Configuration file contains the following:
         "configXmlWidget": [
           {
             "elementName": "author",
-            "attributes": { "email": "chris@whealy.com", "href":  "http://whealy.com" },
-            "content": ["\n    Here's some stuff I wrote\n  "]
+            "attributes": { "email": "$env(USER)@somewhere.com",
+                            "href":  "$npm(init.author.url)" },
+            "content": ["This app was written by $env(USER), better known as $npm(init.author.name) whose email address is either $git(user.email) or $npm(init.author.email)"]
           },
           {
             "elementName": "preference",
-            "attributes": { "name": "loadUrlTimeoutValue", "value": "30000" },
+            "attributes": { "name": "LoadUrlTimeoutValue", "value": "30000" },
             "content": []
+          },
+          {
+            "elementName": "preference",
+            "attributes": { "name": "SomeOtherName", "value": "SomeOtherValue" },
+            "content": []
+          },
+          {
+            "elementName": "feature",
+            "attributes": { "name": "http://example.org/api/geolocation" },
+            "content": [
+              {
+                "elementName": "param",
+                "attributes": { "name": "accuracy", "value": "low" },
+                "content": []
+              }
+            ]
           }
         ]
     }
 
-And your Local Configuration file contains:
+
+The Local Configuration file contains:
 
     {
       "linkTo"       : "./demo_www",
@@ -569,18 +660,20 @@ And your Local Configuration file contains:
     }
 
 
-Then the adjusted `config.xml` file will look like this:
+Assuming the various `git`, `npm`, and environment variable point to my own details, then the adjusted `config.xml` file will look like this:
 
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-    <widget id="mycordovaapp.mycorp.com" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <widget id="cus.sd.mycontacts" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
       <name>My Cool Cordova App</name>
       <description>This app is so cool, it can do everything except squeeze orange juice and tie shoelaces</description>
-      <author email="chris@whealy.com" href="http://whealy.com">
-        Here's some stuff I wrote
-      </author>
+      <author email="chrisw@somewhere.com" href="http://whealy.com/">This app was written by chrisw, better known as Chris Whealy whose email address is either chris@whealy.com or chris@whealy.com</author>
       <content src="index.html"/>
       <access origin="*"/>
-      <preference name="loadUrlTimeoutValue" value="30000"/>
+      <preference name="LoadUrlTimeoutValue" value="30000"/>
+      <preference name="SomeOtherName" value="SomeOtherValue"/>
+      <feature name="http://example.org/api/geolocation">
+        <param name="accuracy" value="low"/>
+      </feature>
     </widget>
 
 [Top](#top)

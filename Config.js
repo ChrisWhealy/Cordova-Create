@@ -78,11 +78,19 @@ var defaultPlatformList = (function(p) {
  * written back to config.xml
  * 
  */ 
+
 var xmlElement = {
-  elementName : "",
-  attributes  : {},
-  content     : []
+    elementName : "",
+    attributes  : {},
+    content     : []
 };
+
+/***
+ * Since various attributes can contain place holder values instead of literal
+ * values, these properties need their own function to return the substituted
+ * value rather than the literal place holder value
+ */
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // Build config file names and check for existence
@@ -99,19 +107,20 @@ var configFiles = (function(fName) {
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // Merge properties from the source object into the destination object.
-// This will either merge values read from either the global or local config
-// files into the current instance
+// This will merge values read from either the global or local config files into
+// the current instance
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 var mergeProperties = function(src, dest) {
+  var unite = false;
+
   for (var p in src) {
     if (p in dest) {
+      unite = (utils.isArray(src[p]) && (p === 'pluginList' || p === 'configXmlWidget'));
+
       // The local pluginList and configXmlWidget values must be merged with the
       // global values.  In all other cases, the local value overrides the global
       // value
-      dest[p] = (utils.isArray(src[p]) &&
-                 (p === 'pluginList' || p === 'configXmlWidget'))
-                ? utils.union(dest[p], src[p])
-                : src[p];
+      dest[p] = (unite) ? utils.union(dest[p], src[p]) : src[p];
     }
     else {
       utils.writeToConsole('log',[["Ignoring unknown property %s in the local config file".warn, p]]);
@@ -137,9 +146,9 @@ var Config = function(action) {
                                ["  Building runtime configuration from global and local configuration files".warn],
                                [utils.separator.warn]]);
 
-  // We start by assuming that neither the local nor global config files exist
-  // Therefore, the localConfig object will be empty and the global config
-  // object will contain the defaults from the prototype
+  // We start by assuming that neither the local nor global config files exist.
+  // Therefore, the localConfig object is assumed to be empty and the global config
+  // object is assumed to contain the defaults from the prototype
   var localConfig  = {};
   var globalConfig = Config.prototype;
 

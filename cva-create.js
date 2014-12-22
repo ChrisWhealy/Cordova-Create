@@ -127,8 +127,7 @@ var userArgs = process.argv.slice((process.argv[0].toLowerCase() == 'node') ? 2 
 var targetFolder, appID, appName = '';
 var platformArgs, targetPlatforms = [];
 
-var action = (userArgs[0] !== 'gen_config' &&
-              userArgs[0] !== 'upgrade_config')
+var action = (userArgs[0] !== 'gen_config' && userArgs[0] !== 'upgrade_config')
              ? "build"
              : userArgs[0];
 
@@ -315,7 +314,7 @@ var setProxy = (function(pConf) {
 // Execute build instructions
 // ============================================================================
   buildInstructions.map(instructionHandler);
-
+  
 // ============================================================================
 // Post build steps
 // ============================================================================

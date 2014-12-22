@@ -19,25 +19,25 @@ var shelljs = require('shelljs');
 var separator = "************************************************************";
 var helpFile  = 'cva-create-help.txt';
 
-// ========================================================================
+// ============================================================================
 // Platform identifier flags
-// ========================================================================
+// ============================================================================
 var isWindows = (os.type().indexOf('Win')    === 0);
 var isLinux   = (os.type().indexOf('Linux')  === 0 || os.type().indexOf('Sun')  === 0);
 var isOSX     = (os.type().indexOf('Darwin') === 0);
 var OSStr     = (isWindows) ? "Windows" : "*NIX";
 
-// ========================================================================
+// ============================================================================
 // Helper functions for tool usage
-// ========================================================================
+// ============================================================================
 var showHelp = function() {
   var raw = fs.readFileSync(path.join(__dirname, helpFile)).toString('utf8');
   writeToConsole('log',[['\n\n' + raw.help]],false);
 };
 
-// ========================================================================
+// ============================================================================
 // Helper functions for defining both property values and property metadata
-// ========================================================================
+// ============================================================================
 var propMetadata = function(md)   {
   return {
     enumerable   : md.e || false,
@@ -50,9 +50,9 @@ var propMetadata = function(md)   {
 var defProp = function(name) { Object.defineProperty(this.prototype, name[0], propMetadata(name[1])); };
 var isArray = function(obj)  { return Object.prototype.toString.apply(obj) === '[object Array]'; };
 
-// ========================================================================
+// ============================================================================
 // Join two arrays eliminating duplicates
-// ========================================================================
+// ============================================================================
 var union = function(a1, a2) {
   var a3 = a1.map(function(v) {
     return (function(i) {
@@ -65,9 +65,9 @@ var union = function(a1, a2) {
 };
 
 
-// ========================================================================
+// ============================================================================
 // Write to console
-// ========================================================================
+// ============================================================================
 var writeToConsole = function(fn,consoleMessages) {
   // Passes each element of consoleMessages to the console function fn
   consoleMessages.map(function(msg) { console[fn].apply(this, msg); });
@@ -79,9 +79,9 @@ var writeStartBanner = function() {
                          [separator.help]]);
 }
 
-// ========================================================================
+// ============================================================================
 // Functions for file management
-// ========================================================================
+// ============================================================================
 var setFilePermissions = (function(isWin) {
   return (isWin)
          ? function() {}   // If running on Windows, this function equates to a NOOP
@@ -110,9 +110,21 @@ var writeToFile = function(fileName,content,permissions) {
   }
 };
 
-// ========================================================================
+// ============================================================================
+// String handling functions
+// ============================================================================
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Removes an escaped new line ("\n") character that terminates a string
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+var dropFinalNL = function(str) {
+  var lfIdx = str.lastIndexOf("\n");
+  return (lfIdx == -1) ? str : str.substring(0,lfIdx);
+}
+
+// ============================================================================
 // Exports
-// ========================================================================
+// ============================================================================
 module.exports.isWindows = isWindows;
 module.exports.islinux   = isLinux;
 module.exports.isOSX     = isOSX;
@@ -124,6 +136,8 @@ module.exports.showHelp = showHelp;
 module.exports.isArray = isArray;
 module.exports.defProp = defProp;
 module.exports.union   = union;
+
+module.exports.dropFinalNL = dropFinalNL;
 
 module.exports.writeToConsole     = writeToConsole;
 module.exports.setFilePermissions = setFilePermissions;
