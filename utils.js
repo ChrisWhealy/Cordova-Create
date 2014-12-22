@@ -122,6 +122,17 @@ var dropFinalNL = function(str) {
   return (lfIdx == -1) ? str : str.substring(0,lfIdx);
 }
 
+
+// ============================================================================
+// Time and date handling functions
+// ============================================================================
+function interval(then) {
+  var elapse = Date.now() - then;
+
+  return { minutes : Math.floor(elapse / 60000),
+           seconds : ((elapse-(Math.floor(elapse/60000)*60000))/1000) };
+}
+
 // ============================================================================
 // Exports
 // ============================================================================
@@ -138,6 +149,8 @@ module.exports.defProp = defProp;
 module.exports.union   = union;
 
 module.exports.dropFinalNL = dropFinalNL;
+
+module.exports.interval = interval;
 
 module.exports.writeToConsole     = writeToConsole;
 module.exports.setFilePermissions = setFilePermissions;

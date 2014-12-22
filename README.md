@@ -1,5 +1,5 @@
 <a name="top"></a>
-#cva-create
+#`cva-create`
 
 ##Table of Contents
 1. [Overview](#header1)  
@@ -28,9 +28,9 @@
 
 <a name="header1"></a>
 ##1) Overview
-**cva-create** is a tool designed primarily to help people who regularly create Cordova projects.  If you're an occasional Cordova user, you might not find this tool so useful.
+`cva-create` is a tool designed primarily to help people who regularly create Cordova projects.  If you're an occasional Cordova user, you might not find this tool so useful.
 
-**cva-create** creates a simple Cordova project for any platform and adds a configurable number of plugins.  In a single command, this tool performs the following sequence of Cordova CLI commands:
+`cva-create` creates a simple Cordova project for any platform and adds a configurable number of plugins.  In a single command, this tool performs the following sequence of Cordova CLI commands:
 
 1. `cordova create <app dir> <app id> <app name>`
 2. `cd <app dir>`
@@ -77,14 +77,14 @@ Macintosh OS X:
 
 Alternatively, if you've downloaded the ZIP file from GitHub, you can install the module as follows:
 
-1. Expand the ZIP file into some working directory
-2. Open a terminal window and change into the above working directory
-3. Issue the following command:
-  * Windows:
-  
+1. Expand the ZIP file into some working directory  
+2. Open a terminal window and change into the above working directory  
+3. Issue the following command:  
+  * Windows:  
+
       `npm install -g`
-  * Mac OS X:
-  
+  * Mac OS X:    
+
       `sudo npm install -g`
 
 [Top](#top)
@@ -93,11 +93,11 @@ Alternatively, if you've downloaded the ZIP file from GitHub, you can install th
 
 <a name="header5"></a>
 ##5) Upgrade
-If you are upgrading **cva-create** from a previous version, before running a build with the new version, first run:
+If you are upgrading `cva-create` from a previous version, before running a build with the new version, first run:
 
     cva-create upgrade_config
   
-The `upgrade_config` parameter causes any new properties used by the latest version of **cva-create** to be inserted into the existing `cva-create.json` file in your home directory.  Existing property values in `cva-create.json` will not be touched.
+The `upgrade_config` parameter causes any new properties used by the latest version of `cva-create` to be inserted into the existing `cva-create.json` file in your home directory.  Existing property values in `cva-create.json` will not be touched.
 
 Running `cva-create upgrade_config` will not build a Cordova project.
 
@@ -107,7 +107,7 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
 <a name="header6"></a>
 ##6) Usage
-1. If this is the first time you have used **cva-create**, then you must start by creating the global configuration file.  Open a terminal window and run:
+1. If this is the first time you have used `cva-create`, then you must start by creating the global configuration file.  Open a terminal window and run:
 
     `cva-create gen_config`
   
@@ -117,7 +117,7 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
   For instance, if your apps always use the plugin `org.apache.cordova.network-information`, then adding this string to the list of plugins will mean it is automatically added to all projects built by `cva-create`.
 
-3. To create a new Cordova project, open a terminal window, navigate to the directory in which you want the project built and issue the *cva-create* command with the following pattern of arguments:
+3. To create a new Cordova project, open a terminal window, navigate to the directory in which you want the project built and issue the `cva-create` command with the following pattern of arguments:
 
 	`cva-create <app dir> <app id> <app name> <zero or more platform names>`
 
@@ -137,7 +137,7 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
 	`cva-create thing_1 com.mycorp.thingamajig Thingamajig`
 
-  To create a project for a platform not listed as a default, simply add the platform name(s).  E.G. for Firefox OS, add "firefoxos":
+  To create a project for a platform not listed as a default, simply add the platform name(s).  E.G. for Firefox OS, add `firefoxos`:
 
 	`cva-create thing_1 com.mycorp.thingamajig Thingamajig firefoxos`
 
@@ -351,11 +351,11 @@ Other than the list of plugins, all values in the local configuration file will 
 
 4. `"replaceTargetDir": true`
 
-   If we need to re-run this command to re-create the project, then the existing target directory will be replaced; that is, it will be deleted and re-created!  **Use with care!**
+   If `cva-create` is re-run from the same directory, then the old project will be deleted and recreated.  **Use with care!**
 
 5. `"runPrepare": true`
 
-   The `cordova prepare` CLI command will be issued after all the plugins have been added
+   The `cordova prepare` CLI command will be issued as the very last step
 
 6. `"platformList": ['ios']`
 
@@ -401,7 +401,7 @@ Within the `config.xml` file, the root element is always called `<widget>` and c
 
 As with the list of plugins, any values found in your local configuration file will be **added** to the zero or more values found in the global configuration file.
 
-The following configuration properties must be defined:
+In order to adjust the `config.xml` file, the following configuration properties must be defined:
 
 1. Setting `adjustConfigXml` to `true` instructs `cva-create` to adjust the `config.xml` file using the values found in the array `configXmlWidget`.  
    Setting `adjustConfigXml` to `false` means that the default `config.xml` generated by Cordova will not be altered, even if values have been specified in the array `configXmlWidget`.
@@ -489,6 +489,27 @@ If multiple instances of the same element are needed, then simply repeat the ele
       }
     ]
 
+**WARNING** If identical `configXmlWidget` element details are added to both the Global and Local configuration files, then both instances of the element will appear in the adjusted `config.xml` file.
+
+The only check for duplicates is for `<preference>` elements having an attibute called `name.`
+  
+If a `<preference>` element is defined in both the Global and Local configuration files that has a `name` attribute, then if the value of the `name` attributes is the same, then the normal priority rules apply in which the local value overrides the global value.
+
+In this case, your Global configuration file could set the Cordova `deviceready` timeout to 30 seconds:
+
+    { "elementName" : "preference",
+      "attributes"  : { "name": "loadUrlTimeoutValue", "value": "30000" },
+      "content"     : []
+    },
+
+But then in your Local configuration file, this value can be overridden and set to 60 seconds for that one particular project.
+
+    { "elementName" : "preference",
+      "attributes"  : { "name": "loadUrlTimeoutValue", "value": "60000" },
+      "content"     : []
+    },
+
+Any other duplicate definitions of `configXmlWidget` elements between the Global and Local configuration files will result in duplicate elements appearing in the adjusted `config.xml` file.  **This could result in an error when trying to run the Cordova project!**
 
 
 
@@ -660,7 +681,7 @@ The Local Configuration file contains:
     }
 
 
-Assuming the various `git`, `npm`, and environment variable point to my own details, then the adjusted `config.xml` file will look like this:
+Assuming the various `git`, `npm`, and environment variables point to my own details, then the adjusted `config.xml` file will look like this:
 
     <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
     <widget id="cus.sd.mycontacts" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">

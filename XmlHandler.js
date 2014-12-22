@@ -22,6 +22,8 @@ var builder = new xml2js.Builder({rootName:'widget'});
 
 var shhhh = {silent:true};
 
+var hasGit = (shelljs.exec('git --version', shhhh).code === 0);
+
 var configCmds = {
   git : 'git config --get ',
   npm : 'npm config get '
@@ -31,7 +33,7 @@ var placeholderRegEx = /\$(git|npm|env)\(([^)]+)\)/g;
 
 
 // ============================================================================
-// Constructor function reads the XML file 
+// Constructor function reads the config.xml file 
 // ============================================================================
 var XmlConfigFile = function(targetFolder) { 
   var tempName = path.join(targetFolder,'config.xml');
@@ -64,11 +66,7 @@ var XmlConfigFile = function(targetFolder) {
 // Define a prototype function
 // ============================================================================
 XmlConfigFile.prototype.update = function(myWidget) {
-  var newWidget = myWidget.reduce(makePropVal, {});
-  
-  for (var p in newWidget) this.widget[p] = newWidget[p];
-  
-  var newXmlFile = builder.buildObject(this.widget);
+  var newXmlFile = builder.buildObject(myWidget.reduce(makePropVal, this.widget));
   
   utils.writeToConsole('log',[["\nNew config.xml".warn],[newXmlFile]]);
   utils.writeToFile(this.fqFileName, newXmlFile, 0755);
@@ -80,7 +78,25 @@ XmlConfigFile.prototype.update = function(myWidget) {
 var makePropVal = function(acc, v) {
   if (v.elementName != "") {
     if (!acc[v.elementName]) acc[v.elementName] = [];
-    acc[v.elementName].push(makeSimpleVal(v));
+    
+    // This logic is somewhat simplistic, but should be sufficient for most
+    // situations.
+    // All element instances are replaced except for <preference> and <param>
+    // elements where multiple occurrences are permitted
+    // 
+    if (v.elementName === 'param')
+      acc[v.elementName].push(makeSimpleVal(v));
+    else
+      if (v.elementName === 'preference') {
+        // If the current preference element and the existing preference element
+        // both have the same name attribute, then override rather than insert
+        if (xmlElementContains(v, acc[v.elementName]))
+          acc[v.elementName] = makeSimpleVal(v);
+        else
+          acc[v.elementName].push(makeSimpleVal(v));
+      }
+    else
+      acc[v.elementName] = makeSimpleVal(v);
   }
 
   return acc;
@@ -94,9 +110,9 @@ var makeSimpleVal = function(v) {
   return (Object.keys(v.attributes).length > 0)
          ? arrayToObj(v,true)
          : (typeof v.content === 'string')
-           ? substPlaceHolders(v.content)
+           ? subst(v.content)
            : (typeof v.content[0] === 'string')
-             ? substPlaceHolders(v.content[0])
+             ? subst(v.content[0])
              : arrayToObj(v,false);
 }
 
@@ -113,18 +129,15 @@ var arrayToObj = function(v,hasAttribs) {
 
   // If the content of this XML element is a simple string, scan the content
   // for place holders and add it to a property called "_"
-  if (typeof v.content === 'string')
-    temp["_"] = substPlaceHolders(v.content);
-  else {
-    if (typeof v.content[0] === 'string')
-      temp["_"] = substPlaceHolders(v.content[0]);
+  if (typeof v.content === 'string') temp["_"] = subst(v.content);
+  else
+    if (typeof v.content[0] === 'string') temp["_"] = subst(v.content[0]);
     else
       // The content element contains nested elements
       for (var i=0; i<v.content.length; i++) {
         if (!temp[v.content[i].elementName]) temp[v.content[i].elementName] = [];
         temp[v.content[i].elementName].push(makeSimpleVal(v.content[i]));
       }
-  }
 
   return temp;
 }
@@ -135,20 +148,39 @@ var arrayToObj = function(v,hasAttribs) {
 // values
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 var checkAttributes = function(attribs) {
-  if (attribs.email && attribs.email.length > 0) attribs.email = substPlaceHolders(attribs.email);
-  if (attribs.href  && attribs.href.length  > 0) attribs.href  = substPlaceHolders(attribs.href);
+  if (attribs.email && attribs.email.length > 0) attribs.email = subst(attribs.email);
+  if (attribs.href  && attribs.href.length  > 0) attribs.href  = subst(attribs.href);
   
   return attribs;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-// Substitute any place holders that might exist in attribute or content values 
+// Check if a <preference name=""> element already exists 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-var substPlaceHolders = function(str) {
-  return str.replace(placeholderRegEx, getPlaceHolderValue)
+var xmlElementContains = function(src,target) {
+  var retVal = false;
+
+  if (src.attributes.name) {
+    for (var i=0; i<target.length; i++) {
+      if (target[i]["$"].name && target[i]["$"].name == src.attributes.name) {
+        retVal = true;
+        break;
+      }
+    }
+  }
+  
+  return retVal;
 }
 
-var getPlaceHolderValue = function(_dontCare, type, ph) {
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Substitute any place holder values that might exist in a character string
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+var subst = function(str) {
+  return str.replace(placeholderRegEx, getSubstVal)
+}
+
+var getSubstVal = function(_dontCare, type, ph) {
   var retVal = (type === 'env')
                ? process.env[ph]
                : utils.dropFinalNL(shelljs.exec(configCmds[type] + ph,shhhh).output);

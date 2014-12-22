@@ -16,17 +16,23 @@
  * @param {String} The first parameter is either:
  *                 a) The target folder name into which the Cordova project is
  *                    to be written, or
- *                 b) The string "gen_gonfig".  This will cause the default
- *                    parameter settings to be written to a file called
+ *                 b) A cva-create directivice such as:
+ *                      "gen_config" or
+ *                      "update_config"
+ *                      
+ *                    "gen_config" instructs cva-create to create the file
  *                    "create-cordova.json" in the user's home directory.
- *                    This file can then be edited to supply values common to
- *                    all Cordova projects. Secondly, the file can be copied
- *                    into the current project directory (I.E. the one from
- *                    which cva-create is executed) and used to hold values
- *                    specific to the current project. 
- *                 
- *                 If "gen_config" is supplied, no other parameters are needed
- *                 or will be processed.
+ *                    This is used as a global configuration file from which
+ *                    cva-create takes its lowest priority default values.
+ *                    
+ *                    "update_config" instructs cva-create to add any new
+ *                    configuration parameters that might exist in the current
+ *                    version of the program into the existing global
+ *                    configuration file.
+ *                    
+ *                 If the directives "gen_config" or "update_config" are
+ *                 supplied, no other parameters are needed or will be
+ *                 processed, neither will a Cordova project be built.
  *
  * @param {String} appId
  *                 The application id used to identify the Cordova application.
@@ -35,7 +41,9 @@
  * @param {String} appName
  *                 The name of the final application
  *
- * @param {String} 0..n Cordova platform names separated by spaces
+ * @param {String} 0..n Cordova platform names separated by spaces.  Any values
+ *                 specified here override the values in both the global and
+ *                 local configuration files.
  * 
  **/
 
@@ -46,13 +54,14 @@
  *    information to work with.
  *
  *    1.1) If any arguments are missing, throw toys out of pram and inform the
- *         user that they need to read the documentation before using this tool
+ *         user that they need to read the documentation before using this tool!
  *    1.2) If all the arguments are present, then store them for later use
  *
  * 2) Read the global configuration parameters. If local configuration parameters
  *    also exist, then update the global values with the local ones.
  *
  *    2.1) Look for cva-create.json in the user's home directory.
+ *    
  *         If it exists, this file will contain the global configuration values
  *         applicable to all Cordova projects such as a list of default plugins
  *         and possibly proxy server settings.
@@ -61,33 +70,36 @@
  *                toys out pram and give up.
  *         2.1.2) If the global configuration file does not exist in the user's
  *                home directory, then create this file using the default values
- *                hard-coded in this program.
+ *                hard-coded in this program and continue.
  *
  *    2.2) Look for cva-create.json in the current directory.
+ *    
  *         If it exists, this file will contain local configuration values
  *         applicable only to the current project.
  *
  *         2.2.1) If the local configuration file does not exist, no problem,
- *                just run with the defaults found in the global configuration
- *                file.
- *         2.2.2) If a local configuration file does exist, then merge these
- *                values with the global configuration values.
+ *                just run with the default values found in the global
+ *                configuration file.
+ *         2.2.2) If a local configuration file does exist, then merge the
+ *                values found in this file with the global configuration values
  *
  *                RULES:
  *                o Local string and Boolean property value overwrite the
  *                  corresponding global property values
  *                o Local platform list overwrites global platform list
- *                o Local plugin list is added to the global plugin list.
- *                  Duplicate entries are removed and the plugin order is
- *                  preserved based on global first, local second.
+ *                o Any platforms listed on the command line overwrite the local
+ *                  platform list
+ *                o The local and global plugin lists are added and duplicate
+ *                  entries are removed.  The order in which the plugins are
+ *                  added is preserved - global first, local second.
  *
  *    2.3) If the user has specified any platforms as command line parameters,
  *         use these values in preference to the values from the configuration
  *         files
  * 
  * 3) Now that we have a merged set of configuration parameters specific to the
- *    requirements of the current project, start the process of building the
- *    Cordova project
+ *    requirements of the current project, assemble the build instructions for
+ *    this Cordova project
  *
  *    3.1) Run "cordova create" using the command line arguments as parameters
  *    3.2) Run "cordova platform add" for the required platforms
@@ -110,6 +122,8 @@ var checkNpmHttpProxy  = 'npm config get proxy';
 var checkNpmHttpsProxy = 'npm config get https-proxy';
 
 var shhhh = {silent:true};
+
+var startTime = Date.now();
 
 colors.setTheme({info:'grey',help:'green',warn:'yellow',debug:'blue',error:'red',none:'white'});
 
@@ -215,9 +229,11 @@ var buildInstructions = [];
 
 buildInstructions.addInstruction = function(fn,p) { this.push({fn:fn, p:p}) };
 
+// ============================================================================
 // If both the copyFrom and linkTo properties are set to valid directories,
 // then apart from being a nonsensical combination of configuration values,
 // we will arbitrarily use copyFrom in preference to linkTo
+// ============================================================================
 var copyFromExists = fs.existsSync(theConfig.copyFrom);
 var linkToExists   = fs.existsSync(theConfig.linkTo);
 
@@ -316,10 +332,10 @@ var setProxy = (function(pConf) {
   buildInstructions.map(instructionHandler);
   
 // ============================================================================
-// Post build steps
+// Run the optional post build steps
 // ============================================================================
 
-// Optionally adjust the config.xml file
+// Adjust the config.xml file?
   if (theConfig.adjustConfigXml) {
     var xmlHandler    = require('./XmlHandler.js');
     var xmlConfigFile = new xmlHandler.XmlConfigFile(fqTargetFolder);
@@ -327,12 +343,16 @@ var setProxy = (function(pConf) {
     xmlConfigFile.update(theConfig.configXmlWidget);
   }
   
-// Optionally run "cordova prepare"
+// Run "cordova prepare"?
   if (theConfig.runPrepare) {
     utils.writeToConsole('log',[["\nRunning cordova prepare".warn]]);
     execCvaCmd('prepare');
   }
   
-  // Bye!
-  utils.writeToConsole('log',[["\nAll done!\n".help]]);
+// ============================================================================
+// Pack up and go home
+// ============================================================================
+  var elapseTime = utils.interval(startTime);
+  
+  utils.writeToConsole('log',[["\nElapse time (min:sec) = %s:%s\nAll done!\n".help, elapseTime.minutes, elapseTime.seconds]]);
 
