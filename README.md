@@ -489,11 +489,12 @@ If multiple instances of the same element are needed, then simply repeat the ele
       }
     ]
 
-**WARNING** If identical `configXmlWidget` element details are added to both the Global and Local configuration files, then both instances of the element will appear in the adjusted `config.xml` file.
+**WARNING**  
+If identical `configXmlWidget` element details are added to both the Global and Local configuration files, then both instances of the element will appear in the adjusted `config.xml` file.
 
-The only check for duplicates is for `<preference>` elements having an attibute called `name.`
+The only check for duplicates is for `<preference>` elements having an attribute called `name.`
   
-If a `<preference>` element is defined in both the Global and Local configuration files that has a `name` attribute, then if the value of the `name` attributes is the same, then the normal priority rules apply in which the local value overrides the global value.
+If a `<preference>` element is defined in both the Global and Local configuration files that has a `name` attribute, then if the values of the `name` attributes are the same, then the normal priority rules apply in which the local value overrides the global value.
 
 In this case, your Global configuration file could set the Cordova `deviceready` timeout to 30 seconds:
 
@@ -509,7 +510,8 @@ But then in your Local configuration file, this value can be overridden and set 
       "content"     : []
     },
 
-Any other duplicate definitions of `configXmlWidget` elements between the Global and Local configuration files will result in duplicate elements appearing in the adjusted `config.xml` file.  **This could result in an error when trying to run the Cordova project!**
+Any other duplicate definitions of `configXmlWidget` elements between the Global and Local configuration files will result in duplicate elements appearing in the adjusted `config.xml` file.  
+**This could result in an error when trying to run the Cordova project!**
 
 
 
