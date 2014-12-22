@@ -480,38 +480,36 @@ If multiple instances of the same element are needed, then simply repeat the ele
         "content"     : []
       },
       { "elementName" : "preference",
-        "attributes"  : { "Squeeze": "Orange Juice" },
+        "attributes"  : { "name": "Squeeze", "value": "Orange Juice" },
         "content"     : []
       },
       { "elementName" : "preference",
-        "attributes"  : { "Tie": "Shoelaces" },
+        "attributes"  : { "name": "Tie", "value": "Shoelaces" },
         "content"     : []
       }
     ]
 
 **WARNING**  
-If identical `configXmlWidget` element details are added to both the Global and Local configuration files, then both instances of the element will appear in the adjusted `config.xml` file.
+Normally, specifying the same `configXmlWidget` element in both the Global and Local configuration files will result in both instances of the element appearing in the adjusted `config.xml` file.
 
-The only check for duplicates is for `<preference>` elements having an attribute called `name.`
-  
-If a `<preference>` element is defined in both the Global and Local configuration files that has a `name` attribute, then if the values of the `name` attributes are the same, then the normal priority rules apply in which the local value overrides the global value.
+The only exception to this rule is for `<preference>` elements having the same value in their `name` attribute.  In this case, the normal priority rules apply and the value from the local configuration file will override the value from the global configuration file.
 
-In this case, your Global configuration file could set the Cordova `deviceready` timeout to 30 seconds:
+For example, you may choose to set the `deviceready` timeout to 30 seconds for all projects:
 
     { "elementName" : "preference",
       "attributes"  : { "name": "loadUrlTimeoutValue", "value": "30000" },
       "content"     : []
     },
 
-But then in your Local configuration file, this value can be overridden and set to 60 seconds for that one particular project.
+However, for one particular project, you know that since more plugns are being used, it will take longer for Cordova to boot up.  Therefore, the Local configuration file for this project contains a duplicate `<preference name="loadUrlTimeoutValue"...>` that sets the timeout to 60 seconds.  In this case, the Local value overrides the Global value.
 
     { "elementName" : "preference",
       "attributes"  : { "name": "loadUrlTimeoutValue", "value": "60000" },
       "content"     : []
     },
 
-Any other duplicate definitions of `configXmlWidget` elements between the Global and Local configuration files will result in duplicate elements appearing in the adjusted `config.xml` file.  
-**This could result in an error when trying to run the Cordova project!**
+Any other duplicate definitions of `configXmlWidget` elements will result in both elements appearing in the adjusted `config.xml` file.  
+**This could possibly cause an error when trying to run the Cordova project!**
 
 
 
@@ -598,65 +596,75 @@ Assuming you have referenced an existing variable, all place holders will be sub
 
 <a name="header12"></a>
 ##12) Full Example
-Here is full (if somewhat excessive) example.  In this example, the Global Configuration file contains the information shown below.  The list of default plugins has been extended, a proxy server is being used, and the `config.xml` file is being adjusted in the following way:
+Here is full (if somewhat excessive) example.  In this example, the Global Configuration file contains the following additional information (over and above the defaults).
 
-Both the attributes and the content of the `<author>` element contain various place holders that will be substituted for the current runtime values of variables obtained from `git`, `npm` and the operating system environment.
+1. The list of default plugins has been extended in both the global and local config files
+2. A proxy server is defined and should be used
+3. The `config.xml` file is being adjusted in the following ways:
+  * Both the attributes and the content of the `<author>` element contain various place holders that will be substituted for the current runtime values of variables obtained from `git`, `npm` and the operating system environment.
+  * The `deviceready` timeout is set to 30 seconds
+  * An additional (nonsense) preference is added called "SomeOtherName"
+  * The Geolocation accuracy is set to 'low' using a `<feature>` element containing a `<param>` element
 
-Two `<preference>` attributes are added as is a `<feature>` element that contains a child `<param>` element.
+The Global Configuration file looks like this:
 
     {
-        "cordovaDebug": false,
-        "copyFrom": "",
-        "linkTo": "",
-        "createParms": "",
-        "replaceTargetDir": false,
-        "runPrepare": false,
-        "pluginList": [
-            "org.apache.cordova.console",
-            "org.apache.cordova.dialogs",
-            "org.apache.cordova.device",
-            "org.apache.cordova.network-information"
-        ],
-        "platformList": [ "android", "ios" ],
-        "proxy": {
-            "useProxy": true,
-            "http":  { "host": "proxy.my-corp.com", "port": 8080 },
-            "https": { "host": "proxy.my-corp.com", "port": 8080 }
+      "cordovaDebug": false,
+      "copyFrom": "",
+      "linkTo": "",
+      "createParms": "",
+      "replaceTargetDir": false,
+      "runPrepare": false,
+      "pluginList": [
+          "org.apache.cordova.console",
+          "org.apache.cordova.dialogs",
+          "org.apache.cordova.device",
+          "org.apache.cordova.network-information"
+      ],
+      "platformList": [ "android", "ios" ],
+      "proxy": {
+          "useProxy": true,
+          "http":  { "host": "proxy.my-corp.com", "port": 8080 },
+          "https": { "host": "proxy.my-corp.com", "port": 8080 }
+      },
+      "adjustConfigXml": true,
+      "configXmlWidget": [
+        {
+          "elementName": "author",
+          "attributes": { "email": "$env(USER)@somewhere.com",
+                          "href":  "$npm(init.author.url)" },
+          "content": ["This app was written by $env(USER), better known as $npm(init.author.name) whose email address is either $git(user.email) or $npm(init.author.email)"]
         },
-        "adjustConfigXml": true,
-        "configXmlWidget": [
-          {
-            "elementName": "author",
-            "attributes": { "email": "$env(USER)@somewhere.com",
-                            "href":  "$npm(init.author.url)" },
-            "content": ["This app was written by $env(USER), better known as $npm(init.author.name) whose email address is either $git(user.email) or $npm(init.author.email)"]
-          },
-          {
-            "elementName": "preference",
-            "attributes": { "name": "LoadUrlTimeoutValue", "value": "30000" },
-            "content": []
-          },
-          {
-            "elementName": "preference",
-            "attributes": { "name": "SomeOtherName", "value": "SomeOtherValue" },
-            "content": []
-          },
-          {
-            "elementName": "feature",
-            "attributes": { "name": "http://example.org/api/geolocation" },
-            "content": [
-              {
-                "elementName": "param",
-                "attributes": { "name": "accuracy", "value": "low" },
-                "content": []
-              }
-            ]
-          }
-        ]
+        {
+          "elementName": "preference",
+          "attributes": { "name": "LoadUrlTimeoutValue", "value": "30000" },
+          "content": []
+        },
+        {
+          "elementName": "preference",
+          "attributes": { "name": "SomeOtherName", "value": "SomeOtherValue" },
+          "content": []
+        },
+        {
+          "elementName": "feature",
+          "attributes": { "name": "http://example.org/api/geolocation" },
+          "content": [
+            {
+              "elementName": "param",
+              "attributes": { "name": "accuracy", "value": "low" },
+              "content": []
+            }
+          ]
+        }
+      ]
     }
 
 
-The Local Configuration file contains:
+The Local Configuration file then modifies this information.
+
+Notice that the definiion of the `<preference>` element having the name `LoadUrlTimeoutValue` has been repeated.  This will set the `deviceready` timeout for this particular project to 60 seconds overriding the value found in the global configuration file.
+
+If any other duplicate `configXmlWidget` elemnts appear in both the global and local configuration files, then both values will appear in the adjusted `config.xml` file.
 
     {
       "linkTo"       : "./demo_www",
@@ -678,7 +686,12 @@ The Local Configuration file contains:
           "elementName" : "description",
           "attributes"  : {},
           "content": "This app is so cool, it can do everything except squeeze orange juice and tie shoelaces"
-        }
+        },
+        {
+          "elementName": "preference",
+          "attributes": { "name": "LoadUrlTimeoutValue", "value": "60000" },
+          "content": []
+        },
       ]
     }
 
@@ -692,7 +705,7 @@ Assuming the various `git`, `npm`, and environment variables point to my own det
       <author email="chrisw@somewhere.com" href="http://whealy.com/">This app was written by chrisw, better known as Chris Whealy whose email address is either chris@whealy.com or chris@whealy.com</author>
       <content src="index.html"/>
       <access origin="*"/>
-      <preference name="LoadUrlTimeoutValue" value="30000"/>
+      <preference name="LoadUrlTimeoutValue" value="60000"/>
       <preference name="SomeOtherName" value="SomeOtherValue"/>
       <feature name="http://example.org/api/geolocation">
         <param name="accuracy" value="low"/>
