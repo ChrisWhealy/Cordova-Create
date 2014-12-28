@@ -135,7 +135,15 @@ var mergeProperties = function(src, dest) {
 // latest version of cva-create.
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 var upgradeGlobalConfig = function(oldGlobal, newGlobal) {
-  for (var p in newGlobal) if (!(p in oldGlobal)) oldGlobal[p] = newGlobal[p];
+  for (var p in newGlobal) {
+    if (!(p in oldGlobal)) {
+      console.log("Adding property %s to global config",p);
+      oldGlobal[p] = newGlobal[p];      
+    }
+    else
+      if (typeof oldGlobal[p] == 'object')
+        oldGlobal[p] = upgradeGlobalConfig(oldGlobal[p], newGlobal[p]);      
+  }
 
   return oldGlobal;
 };
