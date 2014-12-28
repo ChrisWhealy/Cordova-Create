@@ -50,8 +50,17 @@ var platformsByOS  = {
 var defaultPlugins = ['org.apache.cordova.console',
                       'org.apache.cordova.dialogs',
                       'org.apache.cordova.device'];
-var server   = { host : "", port : 0 }; 
-var proxyDef = { useProxy : false, http : server, https : server };
+
+var server   = { host : "", port : 0 };
+var proxyDef = {
+  useProxy            : false,
+  useCredentials      : false,
+  proxyUser           : '',
+  proxyPassword       : '',
+  secureProxyUsesHttp : false,
+  http                : server,
+  https               : server
+};
 
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 var defaultPlatformList = (function(p) {
@@ -84,13 +93,6 @@ var xmlElement = {
     attributes  : {},
     content     : []
 };
-
-/***
- * Since various attributes can contain place holder values instead of literal
- * values, these properties need their own function to return the substituted
- * value rather than the literal place holder value
- */
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // Build config file names and check for existence

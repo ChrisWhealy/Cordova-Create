@@ -44,7 +44,7 @@
 
 <a name="header2"></a>
 ##2) Attribution
-`cva-create` is a fork of John Wargo's [cordova-create tool](https://github.com/johnwargo/Cordova-Create).
+`cva-create` is a fork of John Wargo's now obsolete [cordova-create tool](https://github.com/johnwargo/Cordova-Create).  `Cordova-Create` has now been replaced by [cdva-create](https://github.com/johnwargo/cdva-create).
 
 John is the author of several books on PhoneGap and Cordova such as [Apache Cordova 3 Programming](http://www.cordovaprogramming.com). For more details, see [http://www.johnwargobooks.com].
 
@@ -54,7 +54,7 @@ John is the author of several books on PhoneGap and Cordova such as [Apache Cord
 
 <a name="header3"></a>
 ##3) Requirements
-This module expects the following software to be already installed, configured and working:
+This module expects the following software already to be installed, configured and working:
 
 1. An Apache Cordova development environment, including the appropriate native SDKs (Android Development Tools, Xcode etc.)
 2. NodeJS and other associated tools such as `npm`.
@@ -179,6 +179,10 @@ When a global configuration file is created for the first time on a Mac, it will
       ],
       "proxy": {
         "useProxy": false,
+        "useCredentials" : false,
+        "proxyUser" : "",
+        "proxyPassword" : "",
+        "secureProxyUsesHttp": false,
         "http": {
           "host": "",
           "port": 0
@@ -248,8 +252,8 @@ If you are running on some other operating system, then the only difference will
 
   You can add third party plugins to this list as long as the Cordova CLI can load the plugins using the plugin's ID.  Where this won't work is for locally installed plugins.  If you want to use locally installed plugins, you will need to set a plugin search path during the call to the `cordova create` command using the `createParms` property.
 
-<a name="header8_1"></a>
-* `platformList : [String]`
+
+* <a name="header8_1"></a>`platformList : [String]`
 
   An array containing the names of the default platforms.
 
@@ -262,9 +266,44 @@ If you are running on some other operating system, then the only difference will
 
 * `proxy : Object`
 
-  An object containing host name and port number for both HTTP and HTTPS proxies, and a Boolean flag to indicate whether the proxy settings should be used or not.
+  An object containing various parameters for connecting to the public internet via a proxy server.
   
-  Switching the use of a proxy server on or off is useful if you sometimes need to work outside a corporate network where the proxy settings are no longer needed.
+        "proxy": {
+          "useProxy": false,
+          "useCredentials" : false,
+          "proxyUser" : "",
+          "proxyPassword" : "",
+          "secureProxyUsesHttp": false,
+          "http": {
+            "host": "",
+            "port": 0
+          },
+          "https": {
+            "host": "",
+            "port": 0
+          }
+        },
+  
+  * `useProxy : Boolean`   
+  Switching the use of a proxy server on or off is useful if you need to work both inside and outside a corporate network.  The proxy settings can be switched on and off as required.
+  
+  * `useCredentials : Boolean`  
+  Determines whether user credentials should be used for accessing the proxy server
+  
+  * `proxyUser : String`  
+  Userid to access the proxy server
+  
+  * `proxyPassword : String`  
+  Password to access the proxy server
+  
+  * `secureProxyUsesHttp : Boolean`  
+  If set to true, the `https` proxy hostname and port will be ignored and the `http` hostname and port will be used for both `http` and `https` proxy access
+  
+  * `http : Object`  
+  An object containing the `host` and `port` for `http` proxy access.
+
+  * `https : Object`  
+  An object containing the `host` and `port` for secure proxy access.  If the Boolean property `secureProxyUsesHttp` is set to true, then the values of this object will be ignored
 
 * `adjustConfigXml : Boolean`
 

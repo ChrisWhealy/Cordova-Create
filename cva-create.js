@@ -97,7 +97,9 @@
  *         use these values in preference to the values from the configuration
  *         files
  * 
- * 3) Now that we have a merged set of configuration parameters specific to the
+ * 3) Switch the proxy server settings on or off as required
+ *
+ * 4) Now that we have a merged set of configuration parameters specific to the
  *    requirements of the current project, assemble the build instructions for
  *    this Cordova project
  *
@@ -111,18 +113,14 @@
 
 var app     = require('./Config.js');
 var utils   = require('./utils.js');
+var proxy   = require('./proxy.js');
 var path    = require('path');
 var colors  = require('colors');
 var fs      = require('fs');
 var shelljs = require('shelljs');
 
-var cmdStr = 'cva-create app_dir app_id app_name [platform list]';
-
-var checkNpmHttpProxy  = 'npm config get proxy';
-var checkNpmHttpsProxy = 'npm config get https-proxy';
-
-var shhhh = {silent:true};
-
+var cmdStr    = 'cva-create app_dir app_id app_name [platform list]';
+var shhhh     = {silent:true};
 var startTime = Date.now();
 
 colors.setTheme({info:'grey',help:'green',warn:'yellow',debug:'blue',error:'red',none:'white'});
@@ -196,15 +194,12 @@ var fqTargetFolder = path.join(process.env.PWD, targetFolder);
                                ["  Checking local build environment".warn],
                                [utils.separator.warn]]);
 
-var npmConfigSet     = function(r) { return !(r.code === 0 && r.output.indexOf('null') === 0); }
-var hasGit           = (shelljs.exec('git --version', shhhh).code === 0);
-var npmHttpProxySet  = npmConfigSet(shelljs.exec(checkNpmHttpProxy,shhhh));
-var npmHttpsProxySet = npmConfigSet(shelljs.exec(checkNpmHttpsProxy,shhhh));
+var hasNpm = (shelljs.exec('npm --version', shhhh).code === 0);
+var hasGit = (shelljs.exec('git --version', shhhh).code === 0);
 
-  utils.writeToConsole('log',[['GIT is' + (hasGit ? ' ' : 'not ') + 'installed']]);
-  utils.writeToConsole('log',[['npm HTTP proxy is ' + (npmHttpProxySet ? 'set' : 'unset')]]);
-  utils.writeToConsole('log',[['npm HTTPS proxy is ' + (npmHttpsProxySet ? 'set' : 'unset')]]);
-
+  utils.writeToConsole('log',[['git is' + (hasGit ? ' ' : 'not ') + 'installed']]);
+  utils.writeToConsole('log',[['npm is' + (hasNpm ? ' ' : 'not ') + 'installed']]);
+  
 // ============================================================================
 // Define how to execute a Cordova command
 // ============================================================================
@@ -257,48 +252,15 @@ var cmdSuffix = (copyFromExists)
 // ============================================================================
 // Define npm and GIT proxy settings
 // ============================================================================
-var setProxy = (function(pConf) {  
-  // Minimal validity test for proxy configuration
-  if (pConf.useProxy && (pConf.http.host.length === 0)) {
-    writeToConsole('error',[["Error: Either set proxy.useProxy to false or define a proxy host and port number"]]);
-    process.exit(1);
-  }
-  
-  var httpProxy  = 'http://' + pConf.http.host  + ':' + (pConf.http.port || 80);
-  var httpsProxy = 'http://' + pConf.https.host + ':' + (pConf.https.port || 443);
-  
-  var npmCmdPrefix = 'npm config ' + ((pConf.useProxy) ? 'set ' : 'delete ');
-  var npmCmdHttp   = npmCmdPrefix + 'proxy '       + ((pConf.useProxy) ? httpProxy : '');
-  var npmCmdHttps  = npmCmdPrefix + 'https-proxy ' + ((pConf.useProxy) ? httpsProxy : '');
-  
-  var gitCmdPrefix = 'git config --global' + ((pConf.useProxy) ? ' ' : ' --unset ');
-  var gitCmdHttp   = gitCmdPrefix + 'http.proxy '  + ((pConf.useProxy) ? httpProxy : '');
-  var gitCmdHttps  = gitCmdPrefix + 'https.proxy ' + ((pConf.useProxy) ? httpsProxy : '');
-
-  // On *NIX boxes, do I need to care about writing the proxy settings to ~/.plugman/config?
-  return function() {
-           utils.writeToConsole('log',[['\nUpdating npm proxy server settings'.warn],
-                                       [npmCmdHttp],
-                                       [npmCmdHttps]]);
-           shelljs.exec(npmCmdHttp,shhhh);
-           shelljs.exec(npmCmdHttps,shhhh);
-
-           if (hasGit) {
-             utils.writeToConsole('log',[['\nUpdating proxy servers for GIT'.warn],
-                                         [gitCmdHttp],
-                                         [gitCmdHttps]]);
-             shelljs.exec(gitCmdHttp);
-             shelljs.exec(gitCmdHttps);
-           };
-         };
-})(theConfig.proxy);
+var proxySettings = new proxy.Handler(theConfig.proxy,hasGit,hasNpm);
 
 // ============================================================================
 // Create instruction set for building this project
 // ============================================================================
 
-// Set the npm proxy if required 
-  buildInstructions.addInstruction(setProxy,[theConfig.proxy]);
+// Switch proxy server settings on or off as required 
+  buildInstructions.addInstruction(proxySettings.npmProxy,[(theConfig.proxy.useProxy) ? 'on' : 'off']);
+  buildInstructions.addInstruction(proxySettings.gitProxy,[(theConfig.proxy.useProxy) ? 'on' : 'off']);
 
 // Create Cordova project
   buildInstructions.addInstruction(utils.writeToConsole, ['log',[["\n\n%s",utils.separator.warn],

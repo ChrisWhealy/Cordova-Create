@@ -55,12 +55,9 @@ var isArray = function(obj)  { return Object.prototype.toString.apply(obj) === '
 // ============================================================================
 var union = function(a1, a2) {
   var a3 = a1.map(function(v) {
-    return (function(i) {
-      if (i > -1) a2.splice(i,1);
-      return v;
-    })(a2.indexOf(v))
+    return (function(i) { if (i > -1) a2.splice(i,1); return v; })(a2.indexOf(v))
   });
-  
+
   return (a2.length > 0) ? a3.concat(a2) : a3;
 };
 
