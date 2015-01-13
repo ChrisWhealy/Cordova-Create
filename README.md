@@ -16,12 +16,12 @@
   2. [XML Element: One Or More Attributes And A Simple String As Content](#header10_2)  
   3. [Empty XML Element: One Or More Attributes But No Content](#header10_3)  
   4. [XML Element: One Or More Attributes And Structured Content](#header10_4)
-11. [Using Place Holders In `config.xml` Attributes and Content](#header11)  
-  1. [Place Holder Syntax](#header11_1)  
-  2. [Place Holder Usage](#header11_2)  
+11. [Using Placeholders In `config.xml` Attributes and Content](#header11)  
+  1. [Placeholder Syntax](#header11_1)  
+  2. [Placeholder Usage](#header11_2)  
   3. [Simple Example](#header11_3)  
-  4. [Mulitple Place Holders](#header11_4)  
-  5. [Place Holder Reference Errors](#header11_5)  
+  4. [Multiple Placeholders](#header11_4)  
+  5. [Placeholder Reference Errors](#header11_5)  
 12. [Full Example](#header10_5)
 
 
@@ -573,22 +573,22 @@ The `<feature>` element is a good example, since it can contain zero or more `<p
 
 
 <a name="header11"></a>
-##11) Using Place Holders In `config.xml` Attributes and Content
+##11) Using Placeholders In `config.xml` Attributes and Content
 Generally speaking, most attribute values used by the XML elements in `config.xml` are simple string or Boolean values.  However, there are various attributes that often need to be set equal to values that have already been defined somewhere else.
 
 A typical example is for the attributes and content of the `<author>` element.  Here, you might want to set the email address and URL equal to values that you already defined when you set up either `npm` or `git`.
 
 <a name="header11_1"></a>
-###11.1) Place Holder Syntax
-Instead of repeating a value defined elsewhere, you can reference it using a place holder.  Three place holders are recognised:
+###11.1) Placeholder Syntax
+Instead of repeating a value defined elsewhere, you can reference it using a placeholder.  Three placeholders are recognised:
 
 `$git()` - Reference a `git` variable  
 `$npm()` - Reference an `npm` variable  
 `$env()` - Reference an environment variable available to NodeJS via its `process.env` object
 
 <a name="header11_2"></a>
-###11.2) Place Holder Usage
-Only the XML attributes `email` and `href` will be parsed for place holders; however, if the content of an XML element is a simple string value, then this string value may contain any number of place holders.
+###11.2) Placeholder Usage
+Only the XML attributes `email` and `href` will be parsed for placeholders; however, if the content of an XML element is a simple string value, then this string value may contain any number of placeholders.
 
 If, for instance, you want to pick up the value of the `git` variable `user.email`, simply use the following string somewhere inside the attribute or content string value:
 
@@ -615,21 +615,21 @@ Using the above information, you could now define the `<author>` element of `con
 
 
 <a name="header11_4"></a>
-###11.4) Multiple Place Holders
-You can add as many place holders as you like within a single string value.  So for instance, you might choose to define the content of the `<author>` element like this:
+###11.4) Multiple Placeholders
+You can add as many placeholders as you like within a single string value.  So for instance, you might choose to define the content of the `<author>` element like this:
 
     "content": ["Written by $env(USER), better known as $npm(init.author.name) and whose email address is either $git(user.email) or $npm(init.author.email)"]
 
-Assuming you have referenced an existing variable, all place holders will be substituted with the referenced variable's current runtime value.
+Assuming you have referenced an existing variable, all placeholders will be substituted with the referenced variable's current runtime value.
 
 
 <a name="header11_5"></a>
-###11.5) Place Holder Reference Errors
+###11.5) Placeholder Reference Errors
 **IMPORTANT**
 
-1. If you reference a variable name that does not exist, then the place holder will be replaced with an empty string.
-2. On *NIX machines, all place holder names are case-sensitive!
-3. When using the `$env()` place holder to reference environment variables, you may only specify variables that NodeJS can access via its `process.env` object.  This is usually a smaller list than is displayed if you type `set` from a command prompt.
+1. If you reference a variable name that does not exist, then the placeholder will be replaced with an empty string.
+2. On *NIX machines, all placeholder names are case-sensitive!
+3. When using the `$env()` placeholder to reference environment variables, you may only specify variables that NodeJS can access via its `process.env` object.  This is usually a smaller list than is displayed if you type `set` from a command prompt.
 
 
 
@@ -640,7 +640,7 @@ Here is full (if somewhat excessive) example.  In this example, the Global Confi
 1. The list of default plugins has been extended in both the global and local config files
 2. A proxy server is defined and should be used
 3. The `config.xml` file is being adjusted in the following ways:
-  * Both the attributes and the content of the `<author>` element contain various place holders that will be substituted for the current runtime values of variables obtained from `git`, `npm` and the operating system environment.
+  * Both the attributes and the content of the `<author>` element contain various placeholders that will be substituted for the current runtime values of variables obtained from `git`, `npm` and the operating system environment.
   * The `deviceready` timeout is set to 30 seconds
   * An additional (nonsense) preference is added called "SomeOtherName"
   * The Geolocation accuracy is set to 'low' using a `<feature>` element containing a `<param>` element
@@ -701,7 +701,7 @@ The Global Configuration file looks like this:
 
 The Local Configuration file then modifies this information.
 
-Notice that the definiion of the `<preference>` element having the name `LoadUrlTimeoutValue` has been repeated.  This will set the `deviceready` timeout for this particular project to 60 seconds overriding the value found in the global configuration file.
+Notice that the definition of the `<preference>` element having the name `LoadUrlTimeoutValue` has been repeated.  This will set the `deviceready` timeout for this particular project to 60 seconds overriding the value found in the global configuration file.
 
 If any other duplicate `configXmlWidget` elemnts appear in both the global and local configuration files, then both values will appear in the adjusted `config.xml` file.
 

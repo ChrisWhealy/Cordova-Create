@@ -11,12 +11,15 @@
  * ============================================================================
  **/
 
+function noOp() {}
+
 var os      = require('os');
 var fs      = require('fs');
 var path    = require('path');
 var shelljs = require('shelljs');
 
 var separator = "************************************************************";
+var title     = "*                   C V A - C R E A T E                    *"
 var helpFile  = 'cva-create-help.txt';
 
 // ============================================================================
@@ -30,7 +33,7 @@ var OSStr     = (isWindows) ? "Windows" : "*NIX";
 // ============================================================================
 // Helper functions for tool usage
 // ============================================================================
-var showHelp = function() {
+function showHelp() {
   var raw = fs.readFileSync(path.join(__dirname, helpFile)).toString('utf8');
   writeToConsole('log',[['\n\n' + raw.help]],false);
 };
@@ -38,7 +41,7 @@ var showHelp = function() {
 // ============================================================================
 // Helper functions for defining both property values and property metadata
 // ============================================================================
-var propMetadata = function(md)   {
+function propMetadata(md)   {
   return {
     enumerable   : md.e || false,
     writable     : md.w || false,
@@ -47,62 +50,61 @@ var propMetadata = function(md)   {
   };
 };
 
-var defProp = function(name) { Object.defineProperty(this.prototype, name[0], propMetadata(name[1])); };
-var isArray = function(obj)  { return Object.prototype.toString.apply(obj) === '[object Array]'; };
+function defProp(name) { Object.defineProperty(this.prototype, name[0], propMetadata(name[1])); };
+function isArray(obj)  { return Object.prototype.toString.apply(obj) === '[object Array]'; };
 
 // ============================================================================
 // Join two arrays eliminating duplicates
 // ============================================================================
-var union = function(a1, a2) {
-  var a3 = a1.map(function(v) {
-    return (function(i) { if (i > -1) a2.splice(i,1); return v; })(a2.indexOf(v))
-  });
-
+function union(a1, a2) {
+  var a3 = a1.map(function(v) { return (function(i) { if (i > -1) a2.splice(i,1); return v; })(a2.indexOf(v)) });
   return (a2.length > 0) ? a3.concat(a2) : a3;
 };
 
 
 // ============================================================================
-// Write to console
+// Write stuff to various places
 // ============================================================================
-var writeToConsole = function(fn,consoleMessages) {
-  // Passes each element of consoleMessages to the console function fn
-  consoleMessages.map(function(msg) { console[fn].apply(this, msg); });
-};
-
-var writeStartBanner = function() {
-  writeToConsole('log', [[separator.help],
-                         ["*                   C V A - C R E A T E                    *".help],
-                         [separator.help]]);
-}
+function writeToConsole(fn,consoleMessages) { consoleMessages.map(function(msg) { console[fn].apply(this, msg); }); };
+function writeStartBanner() { writeToConsole('log', [[separator.help], [title.help], [separator.help]]); }
 
 // ============================================================================
 // Functions for file management
 // ============================================================================
-var setFilePermissions = (function(isWin) {
-  return (isWin)
-         ? function() {}   // If running on Windows, this function equates to a NOOP
-         : function(fileName, pFlags) {
-             try { fs.chmodSync(fileName, pFlags); }
-             catch (err) {
-               console.error("Unable to set file permissions: %s".error, err.code);
-               process.exit(1);
-             }
-           }
-})(isWindows);
+function changeMode(fileName, pFlags) {
+  try {
+    fs.chmodSync(fileName, parseInt(pFlags,8));
+  }
+  catch (err) {
+    console.error("Unable to set file permissions for %s to %s".error, fileName, pFlags);
+    process.exit(1);
+  }
+}
 
-var readJSONFile = function(fName,charset) {
-  return JSON.parse(fs.readFileSync(fName, charset || 'utf8'))
+function readJSONFile(fName,charset) { return JSON.parse(fs.readFileSync(fName, charset || 'utf8')); };
+
+function writeToFile(fileName,content,permissions) {
+  try {
+    fs.writeFileSync(fileName, content);
+  }
+  catch(err) {
+    writeToConsole('error',[["Unable to write to file %s".error, fileName],
+                            ["Error object: %s".error, JSON.stringify(err,null,2)]],false);
+    process.exit(1);
+  }
+
+  changeMode(fileName,permissions);
 };
 
-var writeToFile = function(fileName,content,permissions) {
+function writeBuildInstructionsToFile(buildIns) {
+  // First, transform buildInstructions object to a re 
   try {
     fs.writeFileSync(fileName, content);
     setFilePermissions(fileName,permissions);
   }
   catch (err) {
     writeToConsole('error',[["Unable to write to file: %s".error, err.code],
-                            ["Error object: %s".error, JSON.stringify(err)]],false);
+                            ["Error object: %s".error, JSON.stringify(err,null,2)]],false);
     process.exit(1);
   }
 };
@@ -114,7 +116,7 @@ var writeToFile = function(fileName,content,permissions) {
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // Removes an escaped new line ("\n") character that terminates a string
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-var dropFinalNL = function(str) {
+function dropFinalNL(str) {
   var lfIdx = str.lastIndexOf("\n");
   return (lfIdx == -1) ? str : str.substring(0,lfIdx);
 }
@@ -150,7 +152,7 @@ module.exports.dropFinalNL = dropFinalNL;
 module.exports.interval = interval;
 
 module.exports.writeToConsole     = writeToConsole;
-module.exports.setFilePermissions = setFilePermissions;
+module.exports.setFilePermissions = (isWindows) ? noOp : changeMode;
 module.exports.readJSONFile       = readJSONFile;
 module.exports.writeToFile        = writeToFile;
 module.exports.writeStartBanner   = writeStartBanner;

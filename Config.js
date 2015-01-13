@@ -112,7 +112,7 @@ var configFiles = (function(fName) {
 // This will merge values read from either the global or local config files into
 // the current instance
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-var mergeProperties = function(src, dest) {
+function mergeProperties(src, dest) {
   var unite = false;
 
   for (var p in src) {
@@ -134,7 +134,7 @@ var mergeProperties = function(src, dest) {
 // Upgrade the global config file so that it contains any new properties in the
 // latest version of cva-create.
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-var upgradeGlobalConfig = function(oldGlobal, newGlobal) {
+function upgradeGlobalConfig(oldGlobal, newGlobal) {
   for (var p in newGlobal) {
     if (!(p in oldGlobal)) {
       console.log("Adding property %s to global config",p);
@@ -151,7 +151,7 @@ var upgradeGlobalConfig = function(oldGlobal, newGlobal) {
 // ============================================================================
 // Config constructor
 // ============================================================================
-var Config = function(action) {
+function Config(action) {
   utils.writeToConsole('log', [["\n%s",utils.separator.warn],
                                ["  Building runtime configuration from global and local configuration files".warn],
                                [utils.separator.warn]]);
@@ -186,7 +186,7 @@ var Config = function(action) {
         // any new properties.  Therefore, merge the new properties into the
         // existing global config and update the file
         globalConfig = upgradeGlobalConfig(globalConfig, this);
-        utils.writeToFile(this.configFiles.globalConfig.path, JSON.stringify(globalConfig, null, 4), 0755);
+        utils.writeToFile(this.configFiles.globalConfig.path, JSON.stringify(globalConfig, null, 2), '0755');
       }
     }
   }
@@ -194,7 +194,7 @@ var Config = function(action) {
     // Nope, so irrespective of whether we were called with gen_config or not, a
     // global configuration file needs to be created
     utils.writeToConsole('log',[["Creating global configuration file %s", this.configFiles.globalConfig.path]]);
-    utils.writeToFile(this.configFiles.globalConfig.path, JSON.stringify(globalConfig, null, 4), 0755);
+    utils.writeToFile(this.configFiles.globalConfig.path, JSON.stringify(globalConfig, null, 2), '0755');
     this.configFiles.globalConfig.exists = true;
   }
 

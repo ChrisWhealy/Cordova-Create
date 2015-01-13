@@ -6,7 +6,7 @@ command:
 When this has completed, you will find a cva-create.json file in your home
 directory.
 
-If you just upgraded cva-create to the latest version, then first run:
+If you have just upgraded cva-create to the latest version, then first run:
 
   cva-create upgrade_config
 
@@ -23,8 +23,9 @@ command:
 
 The platform list is optional.  If you do not specify any platforms as
 parameters, then cva-create will add the platforms listed in your local
-configuration file.  If a local configuration file does not exist, then the
-platforms listed in the global configuration file will be added.
+configuration file.  If a local configuration file does not exist, or does
+not contain a platform list, then the platforms listed in the global
+configuration file will be added.
 
 So, if Android and iOS are listed as default platforms in your global
 configuration file, then to create a project called Thingamajig in a folder
