@@ -126,10 +126,14 @@ function dropFinalNL(str) {
 // Time and date handling functions
 // ============================================================================
 function interval(then) {
+  var zeroes = '00';
   var elapse = Date.now() - then;
+  var mins   = Math.floor(elapse / 60000) + '';
+  var secs   = ((elapse-(Math.floor(elapse/60000)*60000))/1000) + '';
+  var dot    = secs.indexOf('.');
 
-  return { minutes : Math.floor(elapse / 60000),
-           seconds : ((elapse-(Math.floor(elapse/60000)*60000))/1000) };
+  return { minutes : zeroes.slice(mins.length) + mins,
+           seconds : (dot ? zeroes.slice(dot) : zeroes.slice(secs.length)) + secs};
 }
 
 // ============================================================================
