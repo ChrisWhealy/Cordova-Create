@@ -11,11 +11,12 @@
  * ============================================================================
  **/
 
-var utils   = require('./utils.js');
-var fs      = require('fs');
-var path    = require('path');
-var xml2js  = require('xml2js');
-var shelljs = require('shelljs');
+var utils = require('./utils.js');
+
+var fs      = utils.wrapLib(require('fs'));
+var path    = utils.wrapLib(require('path'));
+var xml2js  = utils.wrapLib(require('xml2js'));
+var shelljs = utils.wrapLib(require('shelljs'));
 
 var parser  = new xml2js.Parser();
 var builder = new xml2js.Builder({rootName:'widget'});
@@ -30,6 +31,7 @@ var configCmds = {
 };
 
 var placeholderRegEx = /\$(git|npm|env)\(([^)]+)\)/g;
+var rw_r__r__        = '0644';
 
 
 // ============================================================================
@@ -69,7 +71,7 @@ function updateXmlFile(myWidget) {
   var newXmlFile = builder.buildObject(myWidget.reduce(makePropVal, this.widget));
   
   utils.writeToConsole('log',[["\nNew config.xml".warn],[newXmlFile]]);
-  utils.writeToFile(this.fqFileName, newXmlFile, '0755');
+  utils.writeToFile(this.fqFileName, newXmlFile, rw_r__r__);
 };
 
 XmlConfigFile.prototype.update = updateXmlFile;

@@ -12,19 +12,17 @@
 
 function noOp() {};
 
-var colors  = require('colors');
-var shelljs = require('shelljs');
-var utils   = require('./utils.js');
+var utils  = require('./utils.js');
+var colors = require('colors');
+
+var shelljs = utils.wrapLib(require('shelljs'));
 
 var npmConfigCmd = 'npm config ';
 var gitConfigCmd = 'git config ';
 
-var npmProxyCmd = [];
+var npmProxyCmd = npmConfigCmd + 'set ';
 var gitProxyCmd = [];
 
-  npmProxyCmd['on']  = npmConfigCmd + 'set ';
-  npmProxyCmd['off'] = npmConfigCmd + 'delete ';
-  
   gitProxyCmd['on']  = gitConfigCmd + '--global ';
   gitProxyCmd['off'] = gitConfigCmd + '--global --unset ';
 
@@ -65,39 +63,40 @@ function Handler(pConf,hasGit,hasNpm) {
     return this;
   }
 
-  // Minimal test for hostname validity
-  if (pConf.useProxy && pConf.https.host.length === 0 ||
-      (pConf.http.host.length === 0 && pConf.secureProxyUsesHttp)) {
-    utils.writeToConsole('error',[["Proxy hostname configuration is not correct".error]]);
-    utils.writeToConsole('error',[["Either set proxy.useProxy to false or define a proxy host and port number".error]]);
-    return this;
-  }
-  
-  // Userid and password must be supplied if credentials are required for proxy access
-  if (pConf.useProxy && pConf.useCredentials) {
-    if (!pConf.proxyUser || pConf.proxyUser.length === 0) {
-      utils.writeToConsole('error',[["Proxy credentials are required, but proxy.proxyUser is either undefined or empty".error]]);
+  if (pConf.useProxy) {
+    // Minimal test for hostname validity
+    if (pConf.https.host.length === 0 || (pConf.http.host.length === 0 && pConf.secureProxyUsesHttp)) {
+      utils.writeToConsole('error',[["Proxy hostname configuration is not correct".error]]);
+      utils.writeToConsole('error',[["Either set proxy.useProxy to false or define a proxy host and port number".error]]);
       return this;
     }
     
-    if (!pConf.proxyPassword || pConf.proxyPassword.length === 0) {
-      utils.writeToConsole('error',[["Proxy credentials are required, but proxy.proxyPassword is either undefined or empty".error]]);
-      return this;        
+    // Userid and password must be supplied if credentials are required for proxy access
+    if (pConf.useCredentials) {
+      if (!pConf.proxyUser || pConf.proxyUser.length === 0) {
+        utils.writeToConsole('error',[["Proxy credentials are required, but proxy.proxyUser is either undefined or empty".error]]);
+        return this;
+      }
+      
+      if (!pConf.proxyPassword || pConf.proxyPassword.length === 0) {
+        utils.writeToConsole('error',[["Proxy credentials are required, but proxy.proxyPassword is either undefined or empty".error]]);
+        return this;        
+      }
     }
+    
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+    // If we make it to here, then the configuration values are at least
+    // correct.  They still might not be valid though...
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *    
+    httpProxy  = formProxyUrl(pConf,false);
+    httpsProxy = formProxyUrl(pConf,true);
   }
   
-  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  // If we make it to here, then the configuration values are at least
-  // correct.  They still might not be valid though...
-  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *    
-  httpProxy  = formProxyUrl(pConf,false);
-  httpsProxy = formProxyUrl(pConf,true);
-
   if (hasNpm) {
     function setNpmProxy(action) {
       utils.writeToConsole('log',[['\nSwitching %s npm proxy server'.warn, action]]);
-      shelljs.exec(npmProxyCmd[action] + 'proxy ' + httpProxy);
-      shelljs.exec(npmProxyCmd[action] + 'https-proxy ' + httpsProxy);
+      shelljs.exec(npmProxyCmd + 'proxy ' + (action === 'on' ? httpProxy : 'null'));
+      shelljs.exec(npmProxyCmd + 'https-proxy ' + (action === 'on' ? httpProxy : 'null'));
     };
     this.npmProxy = setNpmProxy;
   }
@@ -111,8 +110,6 @@ function Handler(pConf,hasGit,hasNpm) {
     this.gitProxy = setGitProxy;
   }
 };
-
-
 
 // ============================================================================
 // Exports

@@ -30,12 +30,12 @@
 ##1) Overview
 `cva-create` is a tool designed primarily to help people who regularly create Cordova projects.  If you're an occasional Cordova user, you might not find this tool so useful.
 
-`cva-create` creates a simple Cordova project for any platform and adds a configurable number of plugins.  In a single command, this tool performs the following sequence of Cordova CLI commands:
+`cva-create` creates a simple Cordova project for any platform and adds a configurable number of plug-ins.  In a single command, this tool performs the following sequence of Cordova CLI commands:
 
 1. `cordova create <app dir> <app id> <app name>`
 2. `cd <app dir>`
 3. `cordova platform add <platform names>`
-4. Zero or more invocations of `cordova plugin add <plugin name>`
+4. Zero or more invocations of `cordova plugin add <plug-in name>`
 5. Optionally updates Cordova's `config.xml` file
 6. Optionally runs `cordova prepare`
 
@@ -115,7 +115,7 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
 2. Edit `cva-create.json` in your home directory as appropriate for your situation.
 
-  For instance, if your apps always use the plugin `org.apache.cordova.network-information`, then adding this string to the list of plugins will mean it is automatically added to all projects built by `cva-create`.
+  For instance, if your apps always use the plug-in `org.apache.cordova.network-information`, then adding this string to the list of plug-ins will mean it is automatically added to all projects built by `cva-create`.
 
 3. To create a new Cordova project, open a terminal window, navigate to the directory in which you want the project built and issue the `cva-create` command with the following pattern of arguments:
 
@@ -236,7 +236,7 @@ If you are running on some other operating system, then the only difference will
 
 * `createParms : String`
 
-  A string representing a double-escaped JSON object containing parameters such as the path name to a local plugins directory
+  A string representing a double-escaped JSON object containing parameters such as the path name to a local plug-ins directory
 
 * `replaceTargetDir : Boolean`
 
@@ -248,9 +248,9 @@ If you are running on some other operating system, then the only difference will
 
 * `pluginList : [String]`
 
-  An array containing the plugins common to all your Cordova projects.
+  An array containing the plug-ins common to all your Cordova projects.
 
-  You can add third party plugins to this list as long as the Cordova CLI can load the plugins using the plugin's ID.  Where this won't work is for locally installed plugins.  If you want to use locally installed plugins, you will need to set a plugin search path during the call to the `cordova create` command using the `createParms` property.
+  You can add third party plug-ins to this list as long as the Cordova CLI can load the plug-ins using the plug-in's ID.  Where this won't work is for locally installed plug-ins.  If you want to use locally installed plug-ins, you will need to set a plug-in search path during the call to the `cordova create` command using the `createParms` property.
 
 
 * <a name="header8_1"></a>`platformList : [String]`
@@ -327,9 +327,9 @@ If you choose to create a local configuration file, then:
 1. This file must live in the same directory from which the `cva-create` command is run.
 2. The local configuration file need only contain those properties that **differ** from the global configuration file.
 
-The rule for merging global and local configuration values is that all values in the local configuration file will override the corresponding values found in the global configuration file **except** for the list of plugins.
+The rule for merging global and local configuration values is that all values in the local configuration file will override the corresponding values found in the global configuration file **except** for the list of plug-ins.
 
-The list of plugins in the local configuration file is always **added** to the list of plugins found in the global configuration file (duplicate entries are removed).
+The list of plug-ins in the local configuration file is always **added** to the list of plug-ins found in the global configuration file (duplicate entries are removed).
 
 For instance, a local configuration file could contain the following:
 
@@ -360,7 +360,7 @@ For instance, a local configuration file could contain the following:
       ]
     }
 
-Other than the list of plugins, all values in the local configuration file will override the corresponding values in the global configuration file as follows (the order in which these properties are specified is not important):
+Other than the list of plug-ins, all values in the local configuration file will override the corresponding values in the global configuration file as follows (the order in which these properties are specified is not important):
 
 1. `"cordovaDebug": true`
 
@@ -372,7 +372,7 @@ Other than the list of plugins, all values in the local configuration file will 
 
 3. `"createParms": "\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\""`
 
-   We want to use some 3rd-party Cordova plugins that live in the `"/usr/3rd-party/plugins/"` directory.
+   We want to use some 3rd-party Cordova plug-ins that live in the `"/usr/3rd-party/plugins/"` directory.
 
    Notice that the string value has been escaped twice.  This results in the need for a triple backslash in certain places!
    
@@ -406,9 +406,9 @@ Other than the list of plugins, all values in the local configuration file will 
       "com.3rd-party.plugins.do-that"
     ]`
 
-  This list of plugins is used to extend the list of plugins found in the global configuration file.
+  This list of plug-ins is used to extend the list of plug-ins found in the global configuration file.
   
-  The plugins that are actually added to your project will be the sum of the global and local plugin lists (after duplicates have been removed) in which the plugin order has been preserved - global first, then local.
+  The plug-ins that are actually added to your project will be the sum of the global and local plug-in lists (after duplicates have been removed) in which the plug-in order has been preserved - global first, then local.
 
 8. `"adjustConfigXml": true`  
      `"configXmlWidget": []`
@@ -438,7 +438,7 @@ When a new Cordova project is created, the basic, OS independent properties of t
 
 Within the `config.xml` file, the root element is always called `<widget>` and contains all the OS independent properties for this project.  If you want to add or update the XML elements within the `<widget>` element, then these values must be defined in either the global or local configuration files.
 
-As with the list of plugins, any values found in your local configuration file will be **added** to the zero or more values found in the global configuration file.
+As with the list of plug-ins, any values found in your local configuration file will be **added** to the zero or more values found in the global configuration file.
 
 In order to adjust the `config.xml` file, the following configuration properties must be defined:
 
@@ -637,7 +637,7 @@ Assuming you have referenced an existing variable, all placeholders will be subs
 ##12) Full Example
 Here is full (if somewhat excessive) example.  In this example, the Global Configuration file contains the following additional information (over and above the defaults).
 
-1. The list of default plugins has been extended in both the global and local config files
+1. The list of default plug-ins has been extended in both the global and local config files
 2. A proxy server is defined and should be used
 3. The `config.xml` file is being adjusted in the following ways:
   * Both the attributes and the content of the `<author>` element contain various placeholders that will be substituted for the current runtime values of variables obtained from `git`, `npm` and the operating system environment.
@@ -703,7 +703,7 @@ The Local Configuration file then modifies this information.
 
 Notice that the definition of the `<preference>` element having the name `LoadUrlTimeoutValue` has been repeated.  This will set the `deviceready` timeout for this particular project to 60 seconds overriding the value found in the global configuration file.
 
-If any other duplicate `configXmlWidget` elemnts appear in both the global and local configuration files, then both values will appear in the adjusted `config.xml` file.
+If any other duplicate `configXmlWidget` elements appear in both the global and local configuration files, then both values will appear in the adjusted `config.xml` file.
 
     {
       "linkTo"       : "./demo_www",
@@ -741,7 +741,7 @@ Assuming the various `git`, `npm`, and environment variables point to my own det
     <widget id="cus.sd.mycontacts" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
       <name>My Cool Cordova App</name>
       <description>This app is so cool, it can do everything except squeeze orange juice and tie shoelaces</description>
-      <author email="chrisw@somewhere.com" href="http://whealy.com/">This app was written by chrisw, better known as Chris Whealy whose email address is either chris@whealy.com or chris@whealy.com</author>
+      <author email="chris@whealy.com" href="http://whealy.com/">This app was written by chrisw, better known as Chris Whealy whose email address is either chris@whealy.com or chris@whealy.com</author>
       <content src="index.html"/>
       <access origin="*"/>
       <preference name="LoadUrlTimeoutValue" value="60000"/>

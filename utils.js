@@ -6,21 +6,52 @@
  * 
  * Utility functions for the node command cva-create 
  * 
- * Author      : Chris Whealy (www.whealy.com)
- * Forked from : Cordova-Create by John M. Wargo (www.johnwargo.com)
+ * Author : Chris Whealy (www.whealy.com)
  * ============================================================================
  **/
 
 function noOp() {}
 
-var os      = require('os');
-var fs      = require('fs');
-var path    = require('path');
-var shelljs = require('shelljs');
+/***
+ * * * * * * * * * * * * * * * RESTART CAPABILITY * * * * * * * * * * * * * * * 
+ * Restart capability carries the following requirements:
+ * 1) Define the build process in terms of a sequence of repeatable steps
+ * 2) Record the library and function name used to implement each step
+ * 3) Record the outcome of each step as it is executed
+ * 4) If the build process fails, allow it to be restarted from the last failed
+ *    step.
+ * 
+ * Step 2 is only possible if every function invoked as part of the build process
+ * is a *named* function.
+ * 
+ * However in JavaScript, this requirement is frequently unfulfilled because of
+ * JavaScript's tendency towards the use of anonymous functions. Therefore, the
+ * following ugly wrapper is needed around every required library to check
+ * for anonymous functions.  If anonymous functions are found, they are wrapped
+ * in a new named function object, thus the fn.name property will be populated
+ * and the function's name can be recorded in the build instructions.
+ */
 
-var separator = "************************************************************";
-var title     = "*                   C V A - C R E A T E                    *"
-var helpFile  = 'cva-create-help.txt';
+function wrapLib(lib) {
+  return Object.keys(lib).reduce(function(acc,v) {
+    acc[v] = (typeof lib[v] === 'function' &&
+              lib[v].name   === '')
+             ? new Function("wrappedFn","return function " + v + "(){ return wrappedFn.apply(this,arguments) };")(lib[v])
+             : lib[v];
+    return acc;
+  },{});
+};
+
+var os      = wrapLib(require('os'));
+var fs      = wrapLib(require('fs'));
+var path    = wrapLib(require('path'));
+var shelljs = wrapLib(require('shelljs'));
+
+var separator   = "************************************************************";
+var title       = "*                   C V A - C R E A T E                    *"
+var helpFile    = 'cva-create-help.txt';
+var restartFile = '.cva-restart.json';
+var rw_r__r__   = '0644';
 
 // ============================================================================
 // Platform identifier flags
@@ -71,6 +102,12 @@ function writeStartBanner() { writeToConsole('log', [[separator.help], [title.he
 // ============================================================================
 // Functions for file management
 // ============================================================================
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Change file permissions.
+// Parameter pFlags must be a string representing the octal file permission
+// flags.  E.G. rwxr-xr-x would be passed as '0755'
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 function changeMode(fileName, pFlags) {
   try {
     fs.chmodSync(fileName, parseInt(pFlags,8));
@@ -81,8 +118,14 @@ function changeMode(fileName, pFlags) {
   }
 }
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Read JSON file and return a parsed JSON object
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 function readJSONFile(fName,charset) { return JSON.parse(fs.readFileSync(fName, charset || 'utf8')); };
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Write content to a file
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 function writeToFile(fileName,content,permissions) {
   try {
     fs.writeFileSync(fileName, content);
@@ -96,25 +139,33 @@ function writeToFile(fileName,content,permissions) {
   changeMode(fileName,permissions);
 };
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Write build instructions to the restart file
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 function writeBuildInstructionsToFile(buildIns) {
-  // First, transform buildInstructions object to a re 
+  var fileName = path.join(process.env.PWD, restartFile);
+  var writableBuildIns = buildIns.map(function(v) {
+    return {lib:v.lib, fn:(v.fn) ? v.fn.name : 'anonymous', p:v.p, c:v.c };
+  })
+
   try {
-    fs.writeFileSync(fileName, content);
-    setFilePermissions(fileName,permissions);
+    fs.writeFileSync(fileName, JSON.stringify(writableBuildIns,null,2));
+    changeMode(fileName,rw_r__r__);
   }
   catch (err) {
-    writeToConsole('error',[["Unable to write to file: %s".error, err.code],
+    writeToConsole('error',[["Unable to write build instructions to %s".error, fileName],
                             ["Error object: %s".error, JSON.stringify(err,null,2)]],false);
     process.exit(1);
   }
 };
+
 
 // ============================================================================
 // String handling functions
 // ============================================================================
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-// Removes an escaped new line ("\n") character that terminates a string
+// Removes an escaped new line character ("\n") at the end of a string
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 function dropFinalNL(str) {
   var lfIdx = str.lastIndexOf("\n");
@@ -147,6 +198,8 @@ module.exports.separator = separator;
 
 module.exports.showHelp = showHelp;
 
+module.exports.wrapLib = wrapLib;
+
 module.exports.isArray = isArray;
 module.exports.defProp = defProp;
 module.exports.union   = union;
@@ -155,9 +208,11 @@ module.exports.dropFinalNL = dropFinalNL;
 
 module.exports.interval = interval;
 
-module.exports.writeToConsole     = writeToConsole;
 module.exports.setFilePermissions = (isWindows) ? noOp : changeMode;
 module.exports.readJSONFile       = readJSONFile;
-module.exports.writeToFile        = writeToFile;
-module.exports.writeStartBanner   = writeStartBanner;
+
+module.exports.writeToFile                  = writeToFile;
+module.exports.writeToConsole               = writeToConsole;
+module.exports.writeStartBanner             = writeStartBanner;
+module.exports.writeBuildInstructionsToFile = writeBuildInstructionsToFile;
 
