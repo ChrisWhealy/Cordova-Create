@@ -8,21 +8,22 @@
 4. [Installation](#header4)  
 5. [Upgrade](#header5)  
 6. [Usage](#header6)  
-7. [Global Configuration File](#header7)  
-8. [Configuration Property Names](#header8)  
-9. [Using a Local Configuration File](#header9)  
-10. [Adjusting the `config.xml` File](#header10)  
-  1. [XML Element: No Attributes And A Simple String As Content](#header10_1)  
-  2. [XML Element: One Or More Attributes And A Simple String As Content](#header10_2)  
-  3. [Empty XML Element: One Or More Attributes But No Content](#header10_3)  
-  4. [XML Element: One Or More Attributes And Structured Content](#header10_4)
-11. [Using Placeholders In `config.xml` Attributes and Content](#header11)  
-  1. [Placeholder Syntax](#header11_1)  
-  2. [Placeholder Usage](#header11_2)  
-  3. [Simple Example](#header11_3)  
-  4. [Multiple Placeholders](#header11_4)  
-  5. [Placeholder Reference Errors](#header11_5)  
-12. [Full Example](#header10_5)
+7. [Restarting a Failed Build](#header7)  
+8. [Global Configuration File](#header8)  
+9. [Configuration Property Names](#header9)  
+10. [Using a Local Configuration File](#header10)  
+11. [Adjusting the `config.xml` File](#header11)  
+  1. [XML Element: No Attributes And A Simple String As Content](#header11_1)  
+  2. [XML Element: One Or More Attributes And A Simple String As Content](#header11_2)  
+  3. [Empty XML Element: One Or More Attributes But No Content](#header11_3)  
+  4. [XML Element: One Or More Attributes And Structured Content](#header11_4)
+12. [Using Placeholders In `config.xml` Attributes and Content](#header12)  
+  1. [Placeholder Syntax](#header12_1)  
+  2. [Placeholder Usage](#header12_2)  
+  3. [Simple Example](#header12_3)  
+  4. [Multiple Placeholders](#header12_4)  
+  5. [Placeholder Reference Errors](#header12_5)  
+13. [Full Example](#header13)
 
 
 
@@ -150,7 +151,31 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
 
 <a name="header7"></a>
-##7) Global Configuration File
+##7) Restarting a Failed Build
+In the event that a particular step of the build process fails, `cva-create` will attempt to continue the build up until it reaches a point where no further progress is possible.
+
+After you have corrected the cause of the failure, you can restart the build by issuing the command:
+
+  `cva-create restart`
+
+`cva-create` will restore the build steps and execution environment that were used by the last build attempt, and restart the build process from first failed step.
+
+Steps are determined to have succeeded or failed based on their return code:
+
+  * -1 --> the step has not yet executed
+  * &nbsp;0 --> the step executed successfully
+  * >0 --> the step failed
+
+Certain steps are deemed never to fail (such as writing to the console) and therefore always return zero.
+
+During a restart, any step that is recorded as having a non-zero return code will either be executed for the first time (if the return code is minus one), or repeated (if the return code is greater than zero).
+
+Certain steps *must* be repeated irrespective of whether they returned zero or not, such as the command to change into the Cordova project directory.
+
+If you have configured `cva-create` to run the `cordova prepare` command, then this step will *always* be repeated.  This is due to the fact that if the addition of one of the plug-ins failed for some reason, then once this plug-in has been added, the `cordova prepare` statement must be rerun.  Therefore, rather than attempting to determine whether a previous failure requires the `cordova prepare` statement to be rerun, it is simplest to arbitrarily rerun this step.
+
+<a name="header8"></a>
+##8) Global Configuration File
 When the `cva-create` tool is run using only the `gen_config` parameter, if the file `create-cordova.json` does not exist in your home directory, then it will be created with default values.
 
 If this file already exists, then it will remain unmodified.  Either way, a Cordova project will not be created.
@@ -202,14 +227,14 @@ When a global configuration file is created for the first time on a Mac, it will
       ]
     }
 
-If you are running on some other operating system, then the only difference will be the list of [default platforms](#header8_1) since this is OS specific.
+If you are running on some other operating system, then the only difference will be the list of [default platforms](#header9_1) since this is OS specific.
 
 [Top](#top)
 
 
 
-<a name="header8"></a>
-##8) Configuration Property Names
+<a name="header9"></a>
+##9) Configuration Property Names
 * `cordovaDebug : Boolean`
 
   Switches the Cordova `-d` flag on or off.  With this option set to true, additional debug information will be written to the console as the Cordova CLI commands are executed.
@@ -250,10 +275,10 @@ If you are running on some other operating system, then the only difference will
 
   An array containing the plug-ins common to all your Cordova projects.
 
-  You can add third party plug-ins to this list as long as the Cordova CLI can load the plug-ins using the plug-in's ID.  Where this won't work is for locally installed plug-ins.  If you want to use locally installed plug-ins, you will need to set a plug-in search path during the call to the `cordova create` command using the `createParms` property.
+  You can add third party plug-ins to this list as long as the Cordova CLI can load the plug-ins using the plug-in's ID.  If you want to include locally installed plug-ins in your project, you must additionally set the plug-in search path during the call to the `cordova create` command using the `createParms` property.  If you forget to do this, then locally installed plug-ins cannot be identified by their ID.
 
 
-* <a name="header8_1"></a>`platformList : [String]`
+* <a name="header9_1"></a>`platformList : [String]`
 
   An array containing the names of the default platforms.
 
@@ -320,8 +345,8 @@ To change the project's configuration, edit the file, providing your own values 
 
 
 
-<a name="header9"></a>
-##9) Using a Local Configuration File
+<a name="header10"></a>
+##10) Using a Local Configuration File
 If you choose to create a local configuration file, then:
 
 1. This file must live in the same directory from which the `cva-create` command is run.
@@ -368,7 +393,7 @@ Other than the list of plug-ins, all values in the local configuration file will
   
 2. `"linkTo": "./demo_www"`
 
-   The cordova "www" directory will be linked to an existing directory accessed using the relative pathname "./demo_www"
+   The cordova "www" directory will be linked to an existing directory accessed using the relative pathname `./demo_www`
 
 3. `"createParms": "\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\""`
 
@@ -376,7 +401,7 @@ Other than the list of plug-ins, all values in the local configuration file will
 
    Notice that the string value has been escaped twice.  This results in the need for a triple backslash in certain places!
    
-   This is necessary because when the value is read from the file, one level of escape characters will be consumed.  Whatever string remains must still retain the correct escape syntax for the embedded double-quote characters:
+   This is necessary because when the value is read from the file, one level of escape characters will be consumed.  Whatever string remains must still retain the correct escape syntax to allow embedded double-quote characters:
    
    Parsing this double-escaped string removes one level of escape characters, so:
    
@@ -386,7 +411,7 @@ Other than the list of plug-ins, all values in the local configuration file will
 
    `"{\"plugin_search_path\": \"/usr/3rd-party/plugins\"}"`
 
-   This parsed string value still contains escaped double quote characters and can now be passed as a parameter to the `cordova create` command.
+   This parsed string value now contains correctly escaped double quote characters and can be passed as a parameter to the `cordova create` command.
 
 4. `"replaceTargetDir": true`
 
@@ -419,8 +444,8 @@ Other than the list of plug-ins, all values in the local configuration file will
 
 
 
-<a name="header10"></a>
-##10) Adjusting the `config.xml` File
+<a name="header11"></a>
+##11) Adjusting the `config.xml` File
 When a new Cordova project is created, the basic, OS independent properties of that project are defined in a file called `config.xml`. A sample of this file looks like this:
 
     <?xml version='1.0' encoding='utf-8'?>
@@ -453,7 +478,7 @@ In order to adjust the `config.xml` file, the following configuration properties
       "content"     : []  
     }`
 
-<a name="header10_1"></a>
+<a name="header11_1"></a>
 ###XML Element: No Attributes And A Simple String As Content   
 If you wish to add an XML element that does not use attributes and contains only a string value as its content, then add the following object as an element in the `configXmlWidget` array.
 
@@ -476,7 +501,7 @@ Alternatively, since the content is a simple string value, the enclosing array c
     ]
 
 
-<a name="header10_2"></a>
+<a name="header11_2"></a>
 ###XML Element: One Or More Attributes And A Simple String As Content   
 If you wish to add an XML element that has both attributes and simple content, then add the following object as an element in the `configXmlWidget` array.
 
@@ -492,7 +517,7 @@ The `<author>` element is a good example here:
 As above, the `content` property can be either a simple string, or an array with a string as the only element.
 
 
-<a name="header10_3"></a>
+<a name="header11_3"></a>
 ###Empty XML Element: One Or More Attributes But No Content   
 If you wish to add an empty XML element (i.e. an XML element that has attributes, but no content), then add the following as an element in the `configXmlWidget` array.
 
@@ -552,7 +577,7 @@ Any other duplicate definitions of `configXmlWidget` elements will result in bot
 
 
 
-<a name="header10_4"></a>
+<a name="header11_4"></a>
 ###XML Element: One Or More Attributes And Structured Content   
 If you wish to add an XML element that has both attributes and structured (that is, non-string) content, then the `content` array property must contain one or more JSON objects of exactly the same structure used for the parent object.
 
@@ -572,22 +597,22 @@ The `<feature>` element is a good example, since it can contain zero or more `<p
 
 
 
-<a name="header11"></a>
-##11) Using Placeholders In `config.xml` Attributes and Content
+<a name="header12"></a>
+##12) Using Placeholders In `config.xml` Attributes and Content
 Generally speaking, most attribute values used by the XML elements in `config.xml` are simple string or Boolean values.  However, there are various attributes that often need to be set equal to values that have already been defined somewhere else.
 
 A typical example is for the attributes and content of the `<author>` element.  Here, you might want to set the email address and URL equal to values that you already defined when you set up either `npm` or `git`.
 
-<a name="header11_1"></a>
-###11.1) Placeholder Syntax
+<a name="header12_1"></a>
+###12.1) Placeholder Syntax
 Instead of repeating a value defined elsewhere, you can reference it using a placeholder.  Three placeholders are recognised:
 
 `$git()` - Reference a `git` variable  
 `$npm()` - Reference an `npm` variable  
 `$env()` - Reference an environment variable available to NodeJS via its `process.env` object
 
-<a name="header11_2"></a>
-###11.2) Placeholder Usage
+<a name="header12_2"></a>
+###12.2) Placeholder Usage
 Only the XML attributes `email` and `href` will be parsed for placeholders; however, if the content of an XML element is a simple string value, then this string value may contain any number of placeholders.
 
 If, for instance, you want to pick up the value of the `git` variable `user.email`, simply use the following string somewhere inside the attribute or content string value:
@@ -602,8 +627,8 @@ Finally, to pick up the value of an environment variable, use:
 
     $env(USER)
 
-<a name="header11_3"></a>
-###11.3) Simple Example
+<a name="header12_3"></a>
+###12.3) Simple Example
 Using the above information, you could now define the `<author>` element of `config.xml` something like this:
 
     {
@@ -614,8 +639,8 @@ Using the above information, you could now define the `<author>` element of `con
     },
 
 
-<a name="header11_4"></a>
-###11.4) Multiple Placeholders
+<a name="header12_4"></a>
+###12.4) Multiple Placeholders
 You can add as many placeholders as you like within a single string value.  So for instance, you might choose to define the content of the `<author>` element like this:
 
     "content": ["Written by $env(USER), better known as $npm(init.author.name) and whose email address is either $git(user.email) or $npm(init.author.email)"]
@@ -623,8 +648,8 @@ You can add as many placeholders as you like within a single string value.  So f
 Assuming you have referenced an existing variable, all placeholders will be substituted with the referenced variable's current runtime value.
 
 
-<a name="header11_5"></a>
-###11.5) Placeholder Reference Errors
+<a name="header12_5"></a>
+###12.5) Placeholder Reference Errors
 **IMPORTANT**
 
 1. If you reference a variable name that does not exist, then the placeholder will be replaced with an empty string.
@@ -633,8 +658,8 @@ Assuming you have referenced an existing variable, all placeholders will be subs
 
 
 
-<a name="header12"></a>
-##12) Full Example
+<a name="header13"></a>
+##13) Full Example
 Here is full (if somewhat excessive) example.  In this example, the Global Configuration file contains the following additional information (over and above the defaults).
 
 1. The list of default plug-ins has been extended in both the global and local config files
@@ -757,4 +782,4 @@ Assuming the various `git`, `npm`, and environment variables point to my own det
 
 
 * * *
-&copy; 2014 [Chris Whealy](http://whealy.com)
+&copy; 2015 [Chris Whealy](http://whealy.com)

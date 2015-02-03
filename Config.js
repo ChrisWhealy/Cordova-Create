@@ -60,7 +60,6 @@ var buildEnv = {
   hasGit : shelljs.exec('git --version', shhhh).code === 0
 }
 
-
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 var defaultPlatformList = (function(p) {
   return (utils.isWindows) ? p.windows : (utils.isOSX) ? p.osx : (utils.isLinux) ? p.linux : p.unknown;
@@ -107,37 +106,41 @@ function Config(action) {
     process.exit(1);
   }
   
-  this.configFiles = {
-    globalConfig : { path : globalConfigFile, exists : fs.existsSync(globalConfigFile) },
-    localConfig  : { path : localConfigFile,  exists : fs.existsSync(localConfigFile) }
-  }
+  this.configFiles.globalConfig.path = globalConfigFile
+  this.configFiles.localConfig.path  = localConfigFile;
+
+  this.configFiles.globalConfig.exists = fs.existsSync(globalConfigFile);
+  this.configFiles.localConfig.exists  = fs.existsSync(localConfigFile);
   
-  // We start by assuming that neither the local nor global config files exist.
-  // Therefore, the localConfig object is assumed to be empty and the global config
-  // object is assumed to contain the defaults from the prototype
-  var localConfig  = {};
-  var globalConfig = {};
+  // The global config object will contain either the contents of the global config
+  // file (if it exists), or the default values from the prototype 
+  var globalConfig = (this.configFiles.globalConfig.exists)
+                     ? utils.readJSONFile(this.configFiles.globalConfig.path)
+                     : Config.prototype;
   
   // Does the global config file already exist?
   if (this.configFiles.globalConfig.exists) {
-    // Yup, so read global config file
-    globalConfig = utils.readJSONFile(this.configFiles.globalConfig.path);
+    // Yup, so merge it with values from the prototype. The merge guarantees that
+    // all property values exist and have at least a default value
     mergeProperties(globalConfig, this);
   }
   else {
-    // Nope, so before anything else happens, a global configuration file needs to be created
-    globalConfig = Config.prototype;
+    // Nope, so create a global configuration file using the prototype defaults
+    // and update the config properties
     utils.writeToFile(this.configFiles.globalConfig.path, JSON.stringify(Config.prototype, null, 2), rw_r__r__);
     this.configFiles.globalConfig.exists = true;
   }
   
-  // Now check for the existence of a local configuration file
-  if (this.configFiles.localConfig.exists) {
-    localConfig = utils.readJSONFile(this.configFiles.localConfig.path);
-  }
+  // Now read the local configuration file
+  var localConfig = utils.readJSONFile(this.configFiles.localConfig.path);
   
   mergeProperties(localConfig, this);
 }
+
+
+
+
+
 
 
 // ============================================================================
@@ -174,25 +177,36 @@ function upgradeGlobalConfig(oldGlobal, newGlobal) {
 };
 
 // ============================================================================
-// Create the properties and functions for Config.prototype
+// Create enumerable properties and functions for Config.prototype
 // ============================================================================
-[['cordovaDebug',     {e:true,  w:true,  c:false, v:false}],
- ['copyFrom',         {e:true,  w:true,  c:false, v:""}],
- ['linkTo',           {e:true,  w:true,  c:false, v:""}],
- ['buildEnv',         {e:true,  w:true,  c:false, v:buildEnv}],
- ['createParms',      {e:true,  w:true,  c:false, v:""}],
- ['replaceTargetDir', {e:true,  w:true,  c:false, v:false}],
- ['runPrepare',       {e:true,  w:true,  c:false, v:false}],
- ['isWindows',        {e:false, w:true,  c:false, v:utils.isWindows}],
- ['isLinux',          {e:false, w:true,  c:false, v:utils.isLinux}],
- ['isOSX',            {e:false, w:true,  c:false, v:utils.isOSX}],
- ['defaultPlugins',   {e:true,  w:true,  c:false, v:defaultPlugins}],
- ['pluginList',       {e:true,  w:true,  c:false, v:[]}],
- ['platformList',     {e:true,  w:true,  c:false, v:defaultPlatformList}],
- ['proxy',            {e:true,  w:true,  c:false, v:proxyDef}],
- ['adjustConfigXml',  {e:true,  w:true,  c:false, v:false}],
- ['configXmlWidget',  {e:true,  w:true,  c:false, v:[xmlElement]}],
-  
+  Config.prototype.cordovaDebug     = false;
+  Config.prototype.runPrepare       = false;
+  Config.prototype.replaceTargetDir = false;
+  Config.prototype.adjustConfigXml  = false;
+
+  Config.prototype.copyFrom     = "";
+  Config.prototype.linkTo       = "";
+  Config.prototype.buildEnv     = buildEnv;
+  Config.prototype.createParms  = "";
+
+  Config.prototype.defaultPlugins  = defaultPlugins;
+  Config.prototype.pluginList      = [];
+  Config.prototype.platformList    = defaultPlatformList;
+  Config.prototype.proxy           = proxyDef;
+  Config.prototype.configXmlWidget = [xmlElement];
+
+  Config.prototype.configFiles = {
+    globalConfig : { path : '', exists : false },
+    localConfig  : { path : '', exists : false }
+  };
+
+// ============================================================================
+// Create non-enumerable properties and functions for Config.prototype
+// ============================================================================
+[['isWindows', {e:false, w:true,  c:false, v:utils.isWindows}],
+ ['isLinux',   {e:false, w:true,  c:false, v:utils.isLinux}],
+ ['isOSX',     {e:false, w:true,  c:false, v:utils.isOSX}],
+
  ['generateGlobalConfig', {e:true,  w:false,  c:false, v:generateGlobalConfig}],
  ['upgradeGlobalConfig',  {e:true,  w:false,  c:false, v:upgradeGlobalConfig}]
 ].map(utils.defProp,Config);
@@ -227,7 +241,7 @@ function mergeProperties(src, dest) {
       dest[p] = (unite) ? utils.union(dest[p], src[p]) : src[p];
     }
     else {
-      utils.writeToConsole('log',[["Ignoring unknown property %s in the local config file".warn, p]]);
+      utils.writeToConsole('log',[["Ignoring unknown property %s in the config file".warn, p]]);
     }
   }
 };

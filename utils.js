@@ -17,7 +17,9 @@ function noOp() {}
  * Restart capability carries the following requirements:
  * 1) Define the build process in terms of a sequence of repeatable steps
  * 2) Record the library and function name used to implement each step
- * 3) Record the outcome of each step as it is executed
+ * 3) Record the outcome of each step as it is executed.  This requires that
+ *    the success or failure of each command can be represented as a numerical
+ *    value.
  * 4) If the build process fails, allow it to be restarted from the last failed
  *    step.
  * 
@@ -26,10 +28,16 @@ function noOp() {}
  * 
  * However in JavaScript, this requirement is frequently unfulfilled because of
  * JavaScript's tendency towards the use of anonymous functions. Therefore, the
- * following ugly wrapper is needed around every required library to check
- * for anonymous functions.  If anonymous functions are found, they are wrapped
- * in a new named function object, thus the fn.name property will be populated
- * and the function's name can be recorded in the build instructions.
+ * following ugly wrapper is needed around every required library to check for,
+ * and then name, any anonymous functions.
+ * 
+ * If anonymous functions are found, they are wrapped in a new named function
+ * object that uses the name of function as seen by the consumer of that
+ * library, thus the function's name property will always be populated and this
+ * can then be recorded in the build instructions.
+ * 
+ * This is ugly though because the text string used as the source code of the
+ * wrapper function must be eval'ed every time it is called...  BLECH!
  */
 
 function wrapLib(lib) {
@@ -49,8 +57,8 @@ var shelljs = wrapLib(require('shelljs'));
 
 var separator   = "************************************************************";
 var title       = "*                   C V A - C R E A T E                    *"
-var helpFile    = 'cva-create-help.txt';
-var restartFile = '.cva-restart.json';
+var helpFile    = path.join(__dirname,'cva-create-help.txt');
+var restartFile = path.join(shelljs.pwd(),'.cva-restart.json');
 var rw_r__r__   = '0644';
 
 // ============================================================================
@@ -65,7 +73,7 @@ var OSStr     = (isWindows) ? "Windows" : "*NIX";
 // Helper functions for tool usage
 // ============================================================================
 function showHelp() {
-  var raw = fs.readFileSync(path.join(__dirname, helpFile)).toString('utf8');
+  var raw = fs.readFileSync(helpFile).toString('utf8');
   writeToConsole('log',[['\n\n' + raw.help]],false);
 };
 
@@ -81,8 +89,9 @@ function propMetadata(md)   {
   };
 };
 
-function defProp(name) { Object.defineProperty(this.prototype, name[0], propMetadata(name[1])); };
-function isArray(obj)  { return Object.prototype.toString.apply(obj) === '[object Array]'; };
+function defProp(name)  { Object.defineProperty(this.prototype, name[0], propMetadata(name[1])); };
+function isArray(obj)   { return Object.prototype.toString.apply(obj) === '[object Array]'; };
+function isNumeric(obj) { return !isArray(obj) && (obj-parseFloat(obj)+1) >= 0; }
 
 // ============================================================================
 // Join two arrays eliminating duplicates
@@ -96,67 +105,61 @@ function union(a1, a2) {
 // ============================================================================
 // Write stuff to various places
 // ============================================================================
-function writeToConsole(fn,consoleMessages) { consoleMessages.map(function(msg) { console[fn].apply(this, msg); }); };
-function writeStartBanner() { writeToConsole('log', [[separator.help], [title.help], [separator.help]]); }
+function writeToConsole(fn,consoleMessages) {
+  consoleMessages.map(function(msg) { console[fn].apply(this, msg); });
+  // writeToConsole never fails...
+  return 0;
+  };
+function writeStartBanner() { return writeToConsole('log', [[separator.help], [title.help], [separator.help]]); }
 
 // ============================================================================
 // Functions for file management
 // ============================================================================
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-// Change file permissions.
-// Parameter pFlags must be a string representing the octal file permission
-// flags.  E.G. rwxr-xr-x would be passed as '0755'
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-function changeMode(fileName, pFlags) {
-  try {
-    fs.chmodSync(fileName, parseInt(pFlags,8));
-  }
-  catch (err) {
-    console.error("Unable to set file permissions for %s to %s".error, fileName, pFlags);
-    process.exit(1);
-  }
-}
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // Read JSON file and return a parsed JSON object
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-function readJSONFile(fName,charset) { return JSON.parse(fs.readFileSync(fName, charset || 'utf8')); };
+function readJSONFile(fName,charset) {
+  var jsonObj = {};
+  
+  try {
+    jsonObj = fs.readFileSync(fName, charset || 'utf8');
+  }
+  catch(err) {
+    writeToConsole('error',[["Error %s trying to %s file %s",err.errno, err.syscall, err.path]]);
+  }
+  
+  return JSON.parse(jsonObj);
+};
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // Write content to a file
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-function writeToFile(fileName,content,permissions) {
+function writeToFile(fileName,content,permissions,flag) {
+  var retCode = 0;
+  
   try {
-    fs.writeFileSync(fileName, content);
+    fs.writeFileSync(fileName, content, {mode:permissions, flag:flag || 'w'});
   }
   catch(err) {
     writeToConsole('error',[["Unable to write to file %s".error, fileName],
                             ["Error object: %s".error, JSON.stringify(err,null,2)]],false);
-    process.exit(1);
+    retCode = 1;
   }
-
-  changeMode(fileName,permissions);
+  
+  return retCode;
 };
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-// Write build instructions to the restart file
+// Read/write build instructions to/from the restart file
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-function writeBuildInstructionsToFile(buildIns) {
-  var fileName = path.join(process.env.PWD, restartFile);
-  var writableBuildIns = buildIns.map(function(v) {
-    return {lib:v.lib, fn:(v.fn) ? v.fn.name : 'anonymous', p:v.p, c:v.c };
-  })
+function readRestartInst() {
+  return readJSONFile(restartFile);
+};
 
-  try {
-    fs.writeFileSync(fileName, JSON.stringify(writableBuildIns,null,2));
-    changeMode(fileName,rw_r__r__);
-  }
-  catch (err) {
-    writeToConsole('error',[["Unable to write build instructions to %s".error, fileName],
-                            ["Error object: %s".error, JSON.stringify(err,null,2)]],false);
-    process.exit(1);
-  }
+function writeRestartInst(buildIns,appConfig) {
+  writeToFile(restartFile, JSON.stringify({ buildInstructions : buildIns,
+                                            appConfig         : appConfig },null,2), rw_r__r__);
 };
 
 
@@ -200,19 +203,19 @@ module.exports.showHelp = showHelp;
 
 module.exports.wrapLib = wrapLib;
 
-module.exports.isArray = isArray;
-module.exports.defProp = defProp;
-module.exports.union   = union;
+module.exports.isArray   = isArray;
+module.exports.isNumeric = isNumeric;
 
+module.exports.defProp     = defProp;
+module.exports.union       = union;
 module.exports.dropFinalNL = dropFinalNL;
+module.exports.interval    = interval;
 
-module.exports.interval = interval;
+module.exports.readJSONFile    = readJSONFile;
+module.exports.readRestartInst = readRestartInst;
 
-module.exports.setFilePermissions = (isWindows) ? noOp : changeMode;
-module.exports.readJSONFile       = readJSONFile;
-
-module.exports.writeToFile                  = writeToFile;
-module.exports.writeToConsole               = writeToConsole;
-module.exports.writeStartBanner             = writeStartBanner;
-module.exports.writeBuildInstructionsToFile = writeBuildInstructionsToFile;
+module.exports.writeToFile      = writeToFile;
+module.exports.writeToConsole   = writeToConsole;
+module.exports.writeStartBanner = writeStartBanner;
+module.exports.writeRestartInst = writeRestartInst;
 

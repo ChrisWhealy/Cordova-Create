@@ -115,32 +115,57 @@
  *
  **/
 
-var utils  = require('./utils.js');
-var app    = require('./Config.js');
-var proxy  = require('./proxy.js');
-var colors = require('colors');
+var confLib  = require('./Config.js');
+var proxyLib = require('./Proxy.js');
 
-var path    = utils.wrapLib(require('path'));
-var fs      = utils.wrapLib(require('fs'));
-var shelljs = utils.wrapLib(require('shelljs'));
+// Define an execution context within which the build instructions can be performed
+var execCtx = {}
 
-var cmdStr    = 'cva-create app_dir app_id app_name [platform list]';
-var shhhh     = {silent:true};
-var startTime = Date.now();
+  execCtx.noOp = function noOp() {};
 
-colors.setTheme({info:'grey',help:'green',warn:'yellow',debug:'blue',error:'red',none:'white'});
+  execCtx.utils  = require('./utils.js');
+  execCtx.colors = require('colors');
+
+  execCtx.colors.setTheme({info:'grey',help:'green',warn:'yellow',debug:'blue',error:'red',none:'white'});
+
+  execCtx.path    = execCtx.utils.wrapLib(require('path'));
+  execCtx.fs      = execCtx.utils.wrapLib(require('fs'));
+  execCtx.shelljs = execCtx.utils.wrapLib(require('shelljs'));
+
+  execCtx.shhhh = {silent:true};
+
+var cmdStr = 'cva-create app_dir app_id app_name [platform list]';
+
+var startTime  = Date.now();
+var elapseTime = 0;
 
 var buildInstructions = [];
-buildInstructions.addInstruction = addInstruction;
+
+  buildInstructions.addInst = addInst;
+
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Adjust config.xml file
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  execCtx.adjustConfigXmlFile = function adjustConfigXmlFile(inFolder,newWidget) {
+    var xmlHandler    = require('./XmlHandler.js');
+    var xmlConfigFile = new xmlHandler.XmlConfigFile(inFolder);
+    return xmlConfigFile.update(newWidget);
+  }
+
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Execute a generic Cordova command
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  execCtx.execCvaCmd = function execCvaCmd(commandStr) {
+    var thisCmd = cordovaCmd + commandStr;
+    execCtx.utils.writeToConsole('log',[['Executing command: %s', thisCmd]]);
+    return execCtx.shelljs.exec(thisCmd).code;
+  };
 
 // ============================================================================
 // Chop off the node command(s) that might be present at the start of the
 // list of arguments
 // ============================================================================
 var userArgs = process.argv.slice((process.argv[0].toLowerCase() == 'node') ? 2 : 1);
-
-var targetFolder, fqTargetFolder, appId, appName = '';
-var platformArgs, targetPlatforms = [];
 
 // The action variable will default to build unless the first parameter is one
 // of 'gen_config', 'update_config' or 'restart'
@@ -150,93 +175,110 @@ var action = (userArgs[0] !== 'gen_config' &&
              ? "build"
              : userArgs[0];
 
-// ============================================================================
+//=============================================================================
 // Get the configuration settings to build this app
-// ============================================================================
-var theConfig = new app.Config(action);
+//=============================================================================
+  execCtx.appConfig = new confLib.Config(action);
 
-// ============================================================================
+//=============================================================================
+// Define npm and GIT proxy settings
+//=============================================================================
+  execCtx.proxySettings = new proxyLib.Handler(execCtx.appConfig.proxy,
+                                               execCtx.appConfig.buildEnv.hasGit,
+                                               execCtx.appConfig.buildEnv.hasNpm);
+
+//=============================================================================
 // Write out start banner, OS type, build environment flags
-// ============================================================================
-  utils.writeStartBanner();
-  utils.writeToConsole('log',[["Running on " + utils.OSStr],
-                              ["\n%s",utils.separator.warn],
-                              ["  Checking local build environment".warn],
-                              [utils.separator.warn],
-                              ['git is' + (theConfig.buildEnv.hasGit ? ' ' : 'not ') + 'installed'],
-                              ['npm is' + (theConfig.buildEnv.hasNpm ? ' ' : 'not ') + 'installed'],
-                              ["\nCordova debug mode is " + ((theConfig.cordovaDebug) ? "en" : "dis") + "abled"]]);
+//=============================================================================
+  execCtx.utils.writeStartBanner();
+  execCtx.utils.writeToConsole('log',[["Running on " + execCtx.utils.OSStr],
+                                      ["\n%s",execCtx.utils.separator.warn],
+                                      ["  Checking local build environment".warn],
+                                      [execCtx.utils.separator.warn],
+                                      ['git is' + (execCtx.appConfig.buildEnv.hasGit ? ' ' : 'not ') + 'installed'],
+                                      ['npm is' + (execCtx.appConfig.buildEnv.hasNpm ? ' ' : 'not ') + 'installed'],
+                                      ["\nCordova debug mode is " + ((execCtx.appConfig.cordovaDebug) ? "en" : "dis") + "abled"]]);
 
-// ============================================================================
+//=============================================================================
 // Define how to execute a Cordova command
-// ============================================================================
-var cordovaCmd = 'cordova' + (theConfig.cordovaDebug ? ' -d ' : ' ');
+//=============================================================================
+var cordovaCmd = 'cordova' + (execCtx.appConfig.cordovaDebug ? ' -d ' : ' ');
 
-// If we've just done a gen_config or an upgrade_config, then we're done
 // 'build' is assumed to be the default action
   switch (action) {
+   // If we've just done a gen_config or an upgrade_config, then we're done
    case 'gen_config':
    case 'upgrade_config':
      // Does the global config file already exist?
      if (action === 'gen_config' && this.configFiles.globalConfig.exists) {
        // Yup, so in the case of gen_config, there's nothing to do
-       utils.writeToConsole('log',[["Global configuration file %s already exists", this.configFiles.globalConfig.path],
-                                   ["No further action taken.\n"]]);
+       execCtx.utils.writeToConsole('log',[["Global configuration file %s already exists", this.configFiles.globalConfig.path],
+                                           ["No further action taken.\n"]]);
      }
      else {
        // Either generate or upgrade the global config file depending on
        // whether or not the file already exists
-       theConfig[(this.configFiles.globalConfig.exists ? 'upgrade' : 'generate') + 'GlobalConfig'](theConfig,this);
+       execCtx.appConfig[(this.configFiles.globalConfig.exists ? 'upgrade' : 'generate') + 'GlobalConfig'](execCtx.appConfig,this);
      }
 
      break;
    case 'restart':
-     utils.writeToConsole('log',[["Restart functionality not implemented yet"]]);
+     execCtx.utils.writeToConsole('log',[["Restarting from last failed step\n".warn]]);
+     
+     // Restore build instructions and application config from the restart file
+     var restartInst = execCtx.utils.readRestartInst();
+     buildInstructions = restartInst.buildInstructions;
+     execCtx.appConfig = restartInst.appConfig;
+
      break;
    default:
      // Check that we've got enough parameters to work with
      if (userArgs.length > 2) {
-       targetFolder    = userArgs[0];
-       appId           = userArgs[1];
-       appName         = userArgs[2];      
-       platformArgs    = userArgs.slice(3);
-       targetPlatforms = (platformArgs.length > 0) ? platformArgs : theConfig.platformList;
+       var ac = execCtx.appConfig;
+       ac.targetFolder = userArgs[0];
+       ac.appId        = userArgs[1];
+       ac.appName      = userArgs[2];      
+       ac.platformArgs = userArgs.slice(3);
+
+       ac.targetPlatforms = (ac.platformArgs.length > 0) ? ac.platformArgs : ac.platformList;
        
        // Check the target folder
-       fqTargetFolder = path.join(process.env.PWD, targetFolder);
+       ac.fqTargetFolder = execCtx.path.join(process.env.PWD, ac.targetFolder);
        
-       if (fs.existsSync(fqTargetFolder)) {
-         if (theConfig.replaceTargetDir) {
-           utils.writeToConsole('log',[["\nReplacing target folder %s".warn, fqTargetFolder]]);
-           shelljs.rm('-rf',targetFolder);
+       if (execCtx.fs.existsSync(ac.fqTargetFolder)) {
+         if (ac.replaceTargetDir) {
+           execCtx.utils.writeToConsole('log',[["\nReplacing target folder %s".warn, ac.fqTargetFolder]]);
+           execCtx.shelljs.rm('-rf',ac.targetFolder);
          }
          else {
-           utils.writeToConsole('error',[["\nTarget folder %s already exists\n".error, fqTargetFolder]]);
+           execCtx.utils.writeToConsole('error',[["\nTarget folder %s already exists\n".error, ac.fqTargetFolder]]);
            process.exit(1);
          }
        }
        
-       doBuild(theConfig,targetFolder,appId,appName,targetPlatforms);
-       
-       // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-       // Write build instructions to file and then execute
-       // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-//       utils.writeBuildInstructionsToFile(buildInstructions);
-       buildInstructions.map(instructionHandler);       
+       doBuild(execCtx);
      }
      else {
-       utils.writeToConsole('error',[["\nMissing one or more parameters!".error],
-                                     ["\nUsage: %s".warn, cmdStr]]);
-       utils.showHelp();
+       execCtx.utils.writeToConsole('error',[["\nMissing one or more parameters!".error], ["\nUsage: %s".warn, cmdStr]]);
+       execCtx.utils.showHelp();
+       process.exit(1);
      }
   }
 
-// ============================================================================
+//=============================================================================
+// As long as we have not been called with gen_config or upgrade_config, then
+// invoke the build instructions.  This could be a regular build or a restart
+//=============================================================================
+  if (action !== 'gen_config' && action !== 'upgrade_config') {
+    buildInstructions.map(instructionHandler, execCtx);
+    execCtx.utils.writeRestartInst(buildInstructions,execCtx.appConfig);
+  }
+
+//=============================================================================
 // Pack up and go home
-// ============================================================================
-  var elapseTime = utils.interval(startTime);
-  
-  utils.writeToConsole('log',[["\nElapse time (min:sec) = %s:%s\nAll done!\n".help, elapseTime.minutes, elapseTime.seconds]]);
+//=============================================================================
+  elapseTime = execCtx.utils.interval(startTime);
+  execCtx.utils.writeToConsole('log',[["\nElapse time (min:sec) = %s:%s\nAll done!\n".help, elapseTime.minutes, elapseTime.seconds]]);
 
 
   
@@ -245,122 +287,140 @@ var cordovaCmd = 'cordova' + (theConfig.cordovaDebug ? ' -d ' : ' ');
   
   
   
-  
-  
-
-// ============================================================================
+//=============================================================================
 // Private API functions
-// ============================================================================
-function noOp() {};
+//=============================================================================
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-// Define build instructions object
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-function instructionHandler(inst) { inst.fn.apply(this,inst.p); };
-function addInstruction(lib,fn,p,c) { this.push({lib:lib, fn:fn, p:p, c:c || -1}) };
+/***
+ * This function is mapped across the buildInstructions array to invoke each
+ * instruction
+ * 
+ * @param inst
+ *        Object containing the instruction information
+ * @param i
+ *        Index of the current instruction in the BuildInstructions array
+ * @param buildInstArray
+ *        The buikldInstructions array
+ * @returns
+ *       Nothing
+ */
+function instructionHandler(inst,i,buildInstArray) {
+  var step = (inst.lib ? inst.lib + '.' : '') + inst.fn + '()';
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-// Adjust config.xml file
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-function adjustConfigXmlFile(inFolder,newWidget) {
-  var xmlHandler    = require('./XmlHandler.js');
-  var xmlConfigFile = new xmlHandler.XmlConfigFile(inFolder);
-  xmlConfigFile.update(newWidget);
-}
+  // The current command should be executed if it:
+  //  a) is mandatory
+  //  b) has never been executed, or
+  //  c) failed last time it was attempted
+  if (inst.m || inst.c !== 0) {
+    var retVal = (inst.lib)
+                 ? this[inst.lib][inst.fn].apply(this,inst.p)
+                 : this[inst.fn].apply(this,inst.p);    
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-// Execute a generic Cordova command
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-function execCvaCmd(commandStr) {
-  var thisCmd = cordovaCmd + commandStr;
-  utils.writeToConsole('log',[['Executing command: %s', thisCmd]]);
-  var resCode = shelljs.exec(thisCmd).code;
-
-  if (resCode !== 0) {
-    utils.writeToConsole('error', [["Unable to execute command (error code: %s)".error, resCode]]);
-    process.exit(1);
+    inst.c = (execCtx.utils.isNumeric(retVal)) ? retVal : (retVal === null) ? 1 : 0;      
+    buildInstArray[i] = inst;
+  }
+  else {
+    execCtx.utils.writeToConsole('log',[["Skipping successful step \"%s\"",step]]);
   }
 };
 
+/***
+ * Add instruction to build instructions array
+ * @param l
+ *        Library name.  This could be null if the function belongs to cva-create.js
+ * @param f
+ *        Function name
+ * @param p
+ *        Parameters. Default = []
+ * @param c
+ *        Return code. Default = -1
+ *        -1 = Not yet executed
+ *         0 = Execution succeeded
+ *        >0 = Execution failed
+ * @param m
+ *        Mandatory. Default = false
+ *        If true, then this command must be executed during a restart
+ * @returns
+ *        Nothing
+ */
+function addInst(l,f,p,c,m) { this.push({lib:l, fn:f, p:p || [], c:c || -1, m:m || false}) };
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // Assemble the instructions to build the current project
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-function doBuild(theConfig,targetFolder,appId,appName,targetPlatforms) {
-// Define npm and GIT proxy settings
-  var proxySettings = new proxy.Handler(theConfig.proxy,
-                                        theConfig.buildEnv.hasGit,
-                                        theConfig.buildEnv.hasNpm);
-  
-// If both the copyFrom and linkTo properties are set to valid directories,
-// then apart from being a nonsensical combination of configuration values,
-// we will arbitrarily use copyFrom in preference to linkTo
-  var copyFromExists = fs.existsSync(theConfig.copyFrom);
-  var linkToExists   = fs.existsSync(theConfig.linkTo);
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+function doBuild(execCtx) {
+// If both the copyFrom and linkTo properties are set to valid directories, then
+// apart from being a nonsensical combination of configuration values, we will
+// arbitrarily use the copyFrom value in preference to the linkTo value
+  var copyFromExists = execCtx.fs.existsSync(execCtx.appConfig.copyFrom);
+  var linkToExists   = execCtx.fs.existsSync(execCtx.appConfig.linkTo);
   var logMsg = [];
   var cmdSuffix = (copyFromExists) 
-                  ? ' --copy-from "' + theConfig.copyFrom + '"'
+                  ? ' --copy-from "' + execCtx.appConfig.copyFrom + '"'
                   : (linkToExists)
-                      ? ' --link-to "' + theConfig.linkTo + '"'
+                      ? ' --link-to "' + execCtx.appConfig.linkTo + '"'
                       : '';
 
-  if (theConfig.copyFrom && !copyFromExists)
-    logMsg.push(['Ignoring the value of the copyFrom property. %s does not exist',theConfig.copyFrom]);
-  if (theConfig.linkTo && !linkToExists)
-    logMsg.push(['Ignoring the value of the linkTo property. %s does not exist.',theConfig.linkTo]);
+  if (execCtx.appConfig.copyFrom && !copyFromExists)
+    logMsg.push(['Ignoring the value of the copyFrom property. %s does not exist',execCtx.appConfig.copyFrom]);
+  if (execCtx.appConfig.linkTo && !linkToExists)
+    logMsg.push(['Ignoring the value of the linkTo property. %s does not exist.',execCtx.appConfig.linkTo]);
   
   if (logMsg.length > 0)
-    buildInstructions.addInstruction('utils',utils.writeToConsole,[['warn',logMsg]]);
+    buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,[['warn',logMsg]],null,true);
   
 // Switch proxy server settings on or off as required
-  buildInstructions.addInstruction('proxySettings',proxySettings.npmProxy, [(theConfig.proxy.useProxy) ? 'on' : 'off']);
-  buildInstructions.addInstruction('proxySettings',proxySettings.gitProxy, [(theConfig.proxy.useProxy) ? 'on' : 'off']);
+  buildInstructions.addInst('proxySettings',execCtx.proxySettings.setNpmProxy.name, [(execCtx.appConfig.proxy.useProxy) ? 'on' : 'off']);
+  buildInstructions.addInst('proxySettings',execCtx.proxySettings.setGitProxy.name, [(execCtx.appConfig.proxy.useProxy) ? 'on' : 'off']);
 
 // Create Cordova project
-  buildInstructions.addInstruction('utils',utils.writeToConsole,
-                                   ['log',[["\n\n%s",utils.separator.warn],
+  buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,
+                                   ['log',[["\n\n%s",execCtx.utils.separator.warn],
                                            ["  Creating project".warn],
-                                           [utils.separator.warn]]]);
-  buildInstructions.addInstruction(null,execCvaCmd,
-                                   ['create '+targetFolder+' '+appId+' "'+appName+'" '+theConfig.createParms+cmdSuffix]);
+                                           [execCtx.utils.separator.warn]]],null,true);
+  buildInstructions.addInst(null,execCtx.execCvaCmd.name,
+                                   ['create '+execCtx.appConfig.targetFolder+' '+execCtx.appConfig.appId+' "'+
+                                    execCtx.appConfig.appName+'" '+execCtx.appConfig.createParms+cmdSuffix]);
 
 // Change into the target folder directory
-  buildInstructions.addInstruction('utils',utils.writeToConsole,
-                                   ['log',[["\n\nChanging to project folder (%s)".warn, targetFolder]]]);
-  buildInstructions.addInstruction('shelljs',shelljs.pushd,[targetFolder, shhhh]);
+  buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,
+                                   ['log',[["\n\nChanging to project folder (%s)".warn, execCtx.appConfig.targetFolder]]],null,true);
+  buildInstructions.addInst('shelljs',execCtx.shelljs.pushd.name,[execCtx.appConfig.targetFolder,execCtx.shhhh],null,true);
 
 // Add platforms
-  buildInstructions.addInstruction('utils',utils.writeToConsole,
-                                   ['log',[["\n\n%s",utils.separator.warn],
-                                           ['  Adding platforms [%s] to the project'.warn, targetPlatforms.join(', ')],
-                                           [utils.separator.warn]]]);
-  buildInstructions.addInstruction(null,execCvaCmd,['platform add ' + targetPlatforms.join(' ')]);
+  buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,
+                                   ['log',[["\n\n%s",execCtx.utils.separator.warn],
+                                           ['  Adding platforms [%s] to the project'.warn, execCtx.appConfig.targetPlatforms.join(', ')],
+                                           [execCtx.utils.separator.warn]]],null,true);
+  buildInstructions.addInst(null,execCtx.execCvaCmd.name,['platform add ' + execCtx.appConfig.targetPlatforms.join(' ')]);
 
 // Add plugins
-  buildInstructions.addInstruction('utils',utils.writeToConsole,
-                                   ['log',[["\n\n%s",utils.separator.warn],
+  buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,
+                                   ['log',[["\n\n%s",execCtx.utils.separator.warn],
                                            ["  Adding Cordova Plugins".warn],
-                                           [utils.separator.warn]]]);
+                                           [execCtx.utils.separator.warn]]],null,true);
 
-  theConfig.pluginList.forEach(function(plugin) {
-    buildInstructions.addInstruction('utils',utils.writeToConsole,
-                                     ['log',[["\nAdding plugin %s to project".warn, plugin]]]);
-    buildInstructions.addInstruction(null,execCvaCmd,['plugin add ' + plugin]);
+  execCtx.appConfig.pluginList.forEach(function(plugin) {
+    buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,
+                                     ['log',[["\nAdding plugin %s to project".warn, plugin]]],null,true);
+    buildInstructions.addInst(null,execCtx.execCvaCmd.name,['plugin add ' + plugin]);
   });
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Optional steps
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  buildInstructions.addInstruction(null, (theConfig.adjustConfigXml) ? adjustConfigXmlFile : noOp,
-                                   [fqTargetFolder,theConfig.configXmlWidget]);
+  buildInstructions.addInst(null, (execCtx.appConfig.adjustConfigXml) ? execCtx.adjustConfigXmlFile.name : execCtx.noOp.name,
+                                   [execCtx.appConfig.fqTargetFolder,execCtx.appConfig.configXmlWidget]);
   
 // Run "cordova prepare"?
-  if (theConfig.runPrepare) {
-    buildInstructions.addInstruction('utils',utils.writeToConsole,
-                                     ['log',[["\nRunning cordova prepare".warn]]]);
-    buildInstructions.addInstruction(null,execCvaCmd,['prepare']);
+  if (execCtx.appConfig.runPrepare) {
+    buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,
+                                     ['log',[["\nRunning cordova prepare".warn]]],null,true);
+    buildInstructions.addInst(null,execCtx.execCvaCmd.name,['prepare'],null,true);
   }
 }
 

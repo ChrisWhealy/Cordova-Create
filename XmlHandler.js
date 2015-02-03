@@ -71,7 +71,7 @@ function updateXmlFile(myWidget) {
   var newXmlFile = builder.buildObject(myWidget.reduce(makePropVal, this.widget));
   
   utils.writeToConsole('log',[["\nNew config.xml".warn],[newXmlFile]]);
-  utils.writeToFile(this.fqFileName, newXmlFile, rw_r__r__);
+  return utils.writeToFile(this.fqFileName, newXmlFile, rw_r__r__);
 };
 
 XmlConfigFile.prototype.update = updateXmlFile;

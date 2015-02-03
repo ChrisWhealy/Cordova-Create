@@ -94,20 +94,24 @@ function Handler(pConf,hasGit,hasNpm) {
   
   if (hasNpm) {
     function setNpmProxy(action) {
+      var retCode = 0;
       utils.writeToConsole('log',[['\nSwitching %s npm proxy server'.warn, action]]);
-      shelljs.exec(npmProxyCmd + 'proxy ' + (action === 'on' ? httpProxy : 'null'));
-      shelljs.exec(npmProxyCmd + 'https-proxy ' + (action === 'on' ? httpProxy : 'null'));
+      retCode = shelljs.exec(npmProxyCmd + 'proxy ' + (action === 'on' ? httpProxy : 'null')).code;
+      retCode = shelljs.exec(npmProxyCmd + 'https-proxy ' + (action === 'on' ? httpProxy : 'null')).code;
+      return retCode;
     };
-    this.npmProxy = setNpmProxy;
+    this.setNpmProxy = setNpmProxy;
   }
    
   if (hasGit) {
     function setGitProxy(action) {
+      var retCode = 0;
       utils.writeToConsole('log',[['Switching %s git proxy server'.warn,action]]);
-      shelljs.exec(gitProxyCmd[action] + 'proxy.http ' + httpProxy);
-      shelljs.exec(gitProxyCmd[action] + 'proxy.https ' + httpsProxy);
+      retCode = shelljs.exec(gitProxyCmd[action] + 'proxy.http ' + httpProxy).code;
+      retCode = shelljs.exec(gitProxyCmd[action] + 'proxy.https ' + httpsProxy).code;
+      return retCode;
     };
-    this.gitProxy = setGitProxy;
+    this.setGitProxy = setGitProxy;
   }
 };
 

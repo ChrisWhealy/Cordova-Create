@@ -37,3 +37,18 @@ To create the same project, but add in the Firefox OS platform as well, you
 would use the following command:
 
   cva-create thing_1 com.mycorp.thingamajig Thingamajig firefoxos
+
+If, for some reason, some step of the build process fails, you can correct the
+failure and then restart the build by issuing the command:
+
+  cva-create restart
+
+Now, the build process will restart at the first failed step.  Any step that
+completed successfully will be skipped.
+
+During a restart, if you have configured cva-create to run "cordova prepare",
+then this command will always be repeated, even if it ran successfully during
+the initial build.  This is because if the addition of a plug-in failed, then
+the addition of that missing plug-in requires a rebuild.  Consequently, if it
+is required, it is easiest to arbitrarily rerun this step.
+ 
