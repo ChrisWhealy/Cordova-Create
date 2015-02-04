@@ -277,8 +277,17 @@ var cordovaCmd = 'cordova' + (execCtx.appConfig.cordovaDebug ? ' -d ' : ' ');
 //=============================================================================
 // Pack up and go home
 //=============================================================================
+  var idx = 0;
+
   elapseTime = execCtx.utils.interval(startTime);
-  execCtx.utils.writeToConsole('log',[["\nElapse time (min:sec) = %s:%s\nAll done!\n".help, elapseTime.minutes, elapseTime.seconds]]);
+  var failedSteps = buildInstructions.reduce(function(acc,inst) { if (inst.c > 0) acc[idx++] = stepName(inst,true); return acc; },[]);
+  
+  if (failedSteps.length > 0) {
+    execCtx.utils.writeToConsole('log',[["\nThe following build steps failed".error], failedSteps]);
+  }
+
+  execCtx.utils.writeToConsole('log',[["\nElapse time (min:sec) = %s:%s".help, elapseTime.minutes, elapseTime.seconds],
+                                      ["\nAll done with %s error%s\n".help,idx,(idx === 0 || idx > 1) ? 's' : '']]);
 
 
   
@@ -300,27 +309,22 @@ var cordovaCmd = 'cordova' + (execCtx.appConfig.cordovaDebug ? ' -d ' : ' ');
  * @param i
  *        Index of the current instruction in the BuildInstructions array
  * @param buildInstArray
- *        The buikldInstructions array
+ *        The buildInstructions array
  * @returns
  *       Nothing
  */
 function instructionHandler(inst,i,buildInstArray) {
-  var step = (inst.lib ? inst.lib + '.' : '') + inst.fn + '()';
-
   // The current command should be executed if it:
   //  a) is mandatory
   //  b) has never been executed, or
   //  c) failed last time it was attempted
   if (inst.m || inst.c !== 0) {
-    var retVal = (inst.lib)
-                 ? this[inst.lib][inst.fn].apply(this,inst.p)
-                 : this[inst.fn].apply(this,inst.p);    
-
+    var retVal = (inst.lib) ? this[inst.lib][inst.fn].apply(this,inst.p) : this[inst.fn].apply(this,inst.p);
     inst.c = (execCtx.utils.isNumeric(retVal)) ? retVal : (retVal === null) ? 1 : 0;      
     buildInstArray[i] = inst;
   }
   else {
-    execCtx.utils.writeToConsole('log',[["Skipping successful step \"%s\"",step]]);
+    execCtx.utils.writeToConsole('log',[["Skipping successful step \"%s\"",stepName(inst)]]);
   }
 };
 
@@ -345,8 +349,17 @@ function instructionHandler(inst,i,buildInstArray) {
  */
 function addInst(l,f,p,c,m) { this.push({lib:l, fn:f, p:p || [], c:c || -1, m:m || false}) };
 
-
-
+/***
+ * Build instruction step name
+ * 
+ * @param inst
+ *        Object: The current instruction
+ * @param addParams
+ *        Boolean: Whether the function parameters should be added to the step name
+ * @returns
+ *        String: The step name
+ */
+function stepName(inst,addParams) { return (inst.lib ? inst.lib + '.' : '') + inst.fn + '(' + (addParams ? inst.p.join(',') : '') + ')'; }
 
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // Assemble the instructions to build the current project
