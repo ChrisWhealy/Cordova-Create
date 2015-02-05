@@ -158,7 +158,7 @@ After you have corrected the cause of the failure, you can restart the build by 
 
   `cva-create restart`
 
-`cva-create` will restore the build steps and execution environment that were used by the last build attempt, and restart the build process from first failed step.
+`cva-create` will restore the build steps and execution environment that were used by the last build attempt, and restart the build process from the first failed step.
 
 Steps are determined to have succeeded or failed based on their return code:
 
@@ -176,7 +176,7 @@ If you have configured `cva-create` to run the `cordova prepare` command, then t
 
 <a name="header8"></a>
 ##8) Global Configuration File
-When the `cva-create` tool is run using only the `gen_config` parameter, if the file `create-cordova.json` does not exist in your home directory, then it will be created with default values.
+When the `cva-create` tool is run using only the `gen_config` parameter, if the file `cva-create.json` does not exist in your home directory, then it will be created with default values.
 
 If this file already exists, then it will remain unmodified.  Either way, a Cordova project will not be created.
 
@@ -310,7 +310,7 @@ If you are running on some other operating system, then the only difference will
         },
   
   * `useProxy : Boolean`   
-  Switching the use of a proxy server on or off is useful if you need to work both inside and outside a corporate network.  The proxy settings can be switched on and off as required.
+  Switching the use of a proxy server on or off is useful if you need to work both inside and outside a corporate network.  The use of a proxy server can be switched on and off as required, without needed to delete the host names or port numbers.
   
   * `useCredentials : Boolean`  
   Determines whether user credentials should be used for accessing the proxy server
@@ -336,7 +336,7 @@ If you are running on some other operating system, then the only difference will
 
 * `configXmlWidget : [Object]`
 
-  An array of objects representing the new or updated elements within the `<widget>` element.
+  An array of objects representing the new or updated elements within the `<widget>` element found inside the `config.xml` file.
 
 
 To change the project's configuration, edit the file, providing your own values for the configuration options described above.
@@ -446,7 +446,7 @@ Other than the list of plug-ins, all values in the local configuration file will
 
 <a name="header11"></a>
 ##11) Adjusting the `config.xml` File
-When a new Cordova project is created, the basic, OS independent properties of that project are defined in a file called `config.xml`. A sample of this file looks like this:
+When a new Cordova project is created, the basic, OS independent properties of that project are defined in a file called `config.xml`. A default `config.xml` file looks something like this:
 
     <?xml version='1.0' encoding='utf-8'?>
     <widget id="mycordovaapp.mycorp.com" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
@@ -601,7 +601,7 @@ The `<feature>` element is a good example, since it can contain zero or more `<p
 ##12) Using Placeholders In `config.xml` Attributes and Content
 Generally speaking, most attribute values used by the XML elements in `config.xml` are simple string or Boolean values.  However, there are various attributes that often need to be set equal to values that have already been defined somewhere else.
 
-A typical example is for the attributes and content of the `<author>` element.  Here, you might want to set the email address and URL equal to values that you already defined when you set up either `npm` or `git`.
+A typical example is for the attributes and content of the `<author>` element.  Here, you might want to set the email address and URL equal to values that have already been defined as `npm`, `git` or environment variables.
 
 <a name="header12_1"></a>
 ###12.1) Placeholder Syntax
