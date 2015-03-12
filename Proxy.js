@@ -92,12 +92,20 @@ function Handler(pConf,hasGit,hasNpm) {
     httpsProxy = formProxyUrl(pConf,true);
   }
   
+  function setEnvProxy(action) {
+    var retCode = 0;
+    retCode += shelljs.exec((action === 'on' ? 'export http_proxy=' + httpProxy : 'unset http_proxy')).code;
+    retCode += shelljs.exec((action === 'on' ? 'export https_proxy=$http_proxy' : 'unset https_proxy')).code;
+    return retCode;
+  }
+  this.setEnvProxy = setEnvProxy;
+  
   if (hasNpm) {
     function setNpmProxy(action) {
       var retCode = 0;
       utils.writeToConsole('log',[['\nSwitching %s npm proxy server'.warn, action]]);
-      retCode = shelljs.exec(npmProxyCmd + 'proxy ' + (action === 'on' ? httpProxy : 'null')).code;
-      retCode = shelljs.exec(npmProxyCmd + 'https-proxy ' + (action === 'on' ? httpProxy : 'null')).code;
+      retCode += shelljs.exec(npmProxyCmd + 'proxy ' + (action === 'on' ? httpProxy : 'null')).code;
+      retCode += shelljs.exec(npmProxyCmd + 'https-proxy ' + (action === 'on' ? httpProxy : 'null')).code;
       return retCode;
     };
     this.setNpmProxy = setNpmProxy;
@@ -107,8 +115,8 @@ function Handler(pConf,hasGit,hasNpm) {
     function setGitProxy(action) {
       var retCode = 0;
       utils.writeToConsole('log',[['Switching %s git proxy server'.warn,action]]);
-      retCode = shelljs.exec(gitProxyCmd[action] + 'proxy.http ' + httpProxy).code;
-      retCode = shelljs.exec(gitProxyCmd[action] + 'proxy.https ' + httpsProxy).code;
+      retCode += shelljs.exec(gitProxyCmd[action] + 'http.proxy ' + httpProxy).code;
+      retCode += shelljs.exec(gitProxyCmd[action] + 'https.proxy ' + httpsProxy).code;
       return retCode;
     };
     this.setGitProxy = setGitProxy;
