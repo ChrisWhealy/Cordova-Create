@@ -33,12 +33,12 @@
 
 `cva-create` creates a simple Cordova project for any platform and adds a configurable number of plug-ins.  In a single command, this tool performs the following sequence of Cordova CLI commands:
 
-1. `cordova create <app dir> <app id> <app name>`
-2. `cd <app dir>`
-3. `cordova platform add <platform names>`
-4. Zero or more invocations of `cordova plugin add <plug-in name>`
+1. Create a Cordova project --> `cordova create <app dir> <app id> <app name>`
+2. Change into the application's directory --> `cd <app dir>`
+3. Add the required platforms --> `cordova platform add <platform names>`
+4. Add zero or more plugins --> `cordova plugin add <plug-in name>`
 5. Optionally updates Cordova's `config.xml` file
-6. Optionally runs `cordova prepare`
+6. Optionally copies platform specific files into the project -->  `cordova prepare`
 
 [Top](#top)
 
@@ -47,7 +47,7 @@
 ##2) Attribution
 `cva-create` is a fork of John Wargo's now obsolete [cordova-create tool](https://github.com/johnwargo/Cordova-Create).  `Cordova-Create` has now been replaced by [cdva-create](https://github.com/johnwargo/cdva-create).
 
-John is the author of several books on PhoneGap and Cordova such as [Apache Cordova 3 Programming](http://www.cordovaprogramming.com). For more details, see [http://www.johnwargobooks.com].
+John is the author of several books on PhoneGap and Cordova such as [Apache Cordova 3 Programming](http://www.cordovaprogramming.com). For more details, see [John's website](http://www.johnwargobooks.com).
 
 [Top](#top)
 
@@ -112,11 +112,11 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
     `cva-create gen_config`
   
-   Using the `gen_config` parameter will not cause a Cordova project to be built.  Instead it will simply create a file called `cva-create.json` in your home directory.  This file contains a set of parameters that will be used as default values when `cva-create` builds a Cordova project.
+   Running `cva-create` with the `gen_config` parameter will **not** cause a Cordova project to be built.  Instead it will simply create a file called `cva-create.json` in your home directory.  This file contains a set of parameters that will be used as default values when `cva-create` builds a Cordova project.
 
 2. Edit `cva-create.json` in your home directory as appropriate for your situation.
 
-  For instance, if your apps always use the plug-in `org.apache.cordova.network-information`, then adding this string to the list of plug-ins will mean it is automatically added to all projects built by `cva-create`.
+  For instance, if you write apps that always use the plug-in `org.apache.cordova.network-information`, then adding this string to the list of plug-ins will mean it is automatically added to all projects built by `cva-create`.
 
 3. To create a new Cordova project, open a terminal window, navigate to the directory in which you want the project built and issue the `cva-create` command with the following pattern of arguments:
 
@@ -152,19 +152,17 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
 <a name="header7"></a>
 ##7) Restarting a Failed Build
-In the event that a particular step of the build process fails, `cva-create` will attempt to continue the build up until it reaches a point where no further progress is possible.
-
-After you have corrected the cause of the failure, you can restart the build by issuing the command:
+In the event that a particular step of the build process fails, `cva-create` will stop at the first failed step.  Once you have fixed the cause of the failure, you do not need to repeat the earlier steps of the build that completed successfully, you can restart the build by issuing the command:
 
   `cva-create restart`
 
-`cva-create` will restore the build steps and execution environment that were used by the last build attempt, and restart the build process from the first failed step.
+`cva-create` will then restart the build process starting at the first step that previously failed.
 
-Steps are determined to have succeeded or failed based on their return code:
+Steps are determined to have succeeded or failed based on their return code.  Any build step that:
 
-  * -1 --> the step has not yet executed
-  * &nbsp;0 --> the step executed successfully
-  * >0 --> the step failed
+  * Has not yet executed has an initial return code of -1
+  * Executed successfully has a return code of 0
+  * Failed has a return code greater than 0
 
 Certain steps are deemed never to fail (such as writing to the console) and therefore always return zero.
 
@@ -172,13 +170,11 @@ During a restart, any step that is recorded as having a non-zero return code wil
 
 Certain steps *must* be repeated irrespective of whether they returned zero or not, such as the command to change into the Cordova project directory.
 
-If you have configured `cva-create` to run the `cordova prepare` command, then this step will *always* be repeated.  This is due to the fact that if the addition of one of the plug-ins failed for some reason, then once this plug-in has been added, the `cordova prepare` statement must be rerun.  Therefore, rather than attempting to determine whether a previous failure requires the `cordova prepare` statement to be rerun, it is simplest to arbitrarily rerun this step.
+If you have configured `cva-create` to run the `cordova prepare` command, then during a restart this step will *always* be repeated.  This is necessary because as a result of the restart, new plugins might have been added.  Therefore, rather than attempting to calculate whether a previous failure requires the `cordova prepare` statement to be rerun, it is simplest to arbitrarily rerun this step.
 
 <a name="header8"></a>
 ##8) Global Configuration File
-When the `cva-create` tool is run using only the `gen_config` parameter, if the file `cva-create.json` does not exist in your home directory, then it will be created with default values.
-
-If this file already exists, then it will remain unmodified.  Either way, a Cordova project will not be created.
+When the `cva-create` tool is run using only the `gen_config` parameter, if the file `cva-create.json` does not exist in your home directory, then it will be created with default values. If this file already exists, then it will remain unmodified.  Either way, a Cordova project will not be created.
 
 On Windows you can find the global configuration file in the directory `c:\users\<user_name>` (replacing `<user_name>` with the logon name of the current user).
 
@@ -243,15 +239,15 @@ If you are running on some other operating system, then the only difference will
 
 * `copyFrom : String`
 
-  The directory from which the contents of the `www` directory should be copied.
+  The directory from which the contents of the Cordova `www` directory should be copied.
 
 * `linkTo : String`
 
-  The directory to which the `www` directory should be linked.
+  The directory to which the Cordova `www` directory should be linked.
   
-  **NOTE:**  It makes no sense to supply pathnames for both the `copyFrom` *and* `linkTo` properties.  You should specify one, or the other, but not both.
+  **NOTE:**  It makes no sense to supply pathnames for both the `copyFrom` *and* `linkTo` properties.  You should specify one or the other, but not both.
   
-  However, if you are feeling particularly over zealous and supply pathnames for *both* parameters, then the following logic is used:
+  However, if you are feeling particularly over-zealous and supply pathnames for *both* parameters, then the following logic is used:
   
         Does the directory name specified in "copyFrom" exist?
           Yes --> Use this value for the --copyFrom parameter and ignore the "linkTo" property
