@@ -306,7 +306,7 @@ If you are running on some other operating system, then the only difference will
         },
   
   * `useProxy : Boolean`   
-  Switching the use of a proxy server on or off is useful if you need to work both inside and outside a corporate network.  The use of a proxy server can be switched on and off as required, without needed to delete the host names or port numbers.
+  Switching the use of a proxy server on or off is useful if you need to work both inside and outside a corporate network.  The use of a proxy server can be switched on and off as required, without needing to delete the host names or port numbers.
   
   * `useCredentials : Boolean`  
   Determines whether user credentials should be used for accessing the proxy server
@@ -324,15 +324,15 @@ If you are running on some other operating system, then the only difference will
   An object containing the `host` and `port` for `http` proxy access.
 
   * `https : Object`  
-  An object containing the `host` and `port` for secure proxy access.  If the Boolean property `secureProxyUsesHttp` is set to true, then the values of this object will be ignored
+  An object containing the `host` and `port` for secure proxy access.  If the Boolean property `secureProxyUsesHttp` is set to true, then the property values in this object will be ignored.
 
 * `adjustConfigXml : Boolean`
 
-  A Boolean to indicate whether or not the Cordova's project's `config.xml` file should be adjusted.
+  A Boolean to indicate whether or not the Cordova project's `config.xml` file should be adjusted.
 
 * `configXmlWidget : [Object]`
 
-  An array of objects representing the new or updated elements within the `<widget>` element found inside the `config.xml` file.
+  An array of objects representing the new or updated elements to be inserted into the `<widget>` element found inside the `config.xml` file.
 
 
 To change the project's configuration, edit the file, providing your own values for the configuration options described above.
