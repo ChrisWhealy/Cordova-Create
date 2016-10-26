@@ -17,7 +17,7 @@ var colors = require('colors');
 
 var fs      = utils.wrapLib(require('fs'));
 var path    = utils.wrapLib(require('path'));
-var os      = utils.wrapLib(require('os'));
+//var os      = utils.wrapLib(require('os'));
 var shelljs = utils.wrapLib(require('shelljs'));
 
 

@@ -165,7 +165,7 @@ var buildInstructions = [];
 // Chop off the node command(s) that might be present at the start of the
 // list of arguments
 // ============================================================================
-var userArgs = process.argv.slice((process.argv[0].toLowerCase() == 'node') ? 2 : 1);
+var userArgs = process.argv.slice((/node/i.exec(process.argv[0]).length > 0) ? 2 : 1);
 
 // The action variable will default to build unless the first parameter is one
 // of 'gen_config', 'update_config' or 'restart'

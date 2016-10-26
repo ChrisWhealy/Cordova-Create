@@ -101,7 +101,6 @@ function union(a1, a2) {
   return (a2.length > 0) ? a3.concat(a2) : a3;
 };
 
-
 // ============================================================================
 // Write stuff to various places
 // ============================================================================
@@ -110,6 +109,7 @@ function writeToConsole(fn,consoleMessages) {
   // writeToConsole never fails...
   return 0;
   };
+
 function writeStartBanner() { return writeToConsole('log', [[separator.help], [title.help], [separator.help]]); }
 
 // ============================================================================
