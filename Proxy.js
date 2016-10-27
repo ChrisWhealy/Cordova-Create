@@ -12,25 +12,29 @@
 
 function noOp() {};
 
+var shhhh = { silent : true }
+
 var utils  = require('./utils.js');
 var colors = require('colors');
 
 var shelljs = utils.wrapLib(require('shelljs'));
 
-var npmConfigCmd = 'npm config ';
-var gitConfigCmd = 'git config ';
+var configCmd = cmd => cmd + ' config '
 
-var npmProxyCmd = npmConfigCmd + 'set ';
+var npmProxyCmd = configCmd('npm') + 'set ';
 var gitProxyCmd = [];
 
-  gitProxyCmd['on']  = gitConfigCmd + '--global ';
-  gitProxyCmd['off'] = gitConfigCmd + '--global --unset ';
+  gitProxyCmd['on']  = configCmd('git') + '--global ';
+  gitProxyCmd['off'] = configCmd('git') + '--global --unset ';
 
+// Allow return codes of 0 or 5 to mean success from the `git config` command  
+var allow5 = v => v === 5 ? 0 : v
 
-function credentials(p)    { return (p.useCredentials) ? p.proxyUser + ':' + p.proxyPassword + '@' : ''; }
-function formProtocol(p,s) { return 'http' + ((s) ? (p.secureProxyUsesHttp) ? ':' : 's:' : ':') + '//'; }
-function formPort(p,s)     { return (s) ? (p.secureProxyUsesHttp) ? (p.http.port || 80) : (p.https.port || 443) : (p.http.port || 80); }
-function formProxyUrl(p,s) { return formProtocol(p,s) + credentials(p) + p['http'+(s?'s':'')].host + ':' + formPort(p,s); }
+// Functions to build the proxy URL
+var credentials  = p      => p.useCredentials ? p.proxyUser + ':' + p.proxyPassword + '@' : ''
+var formProtocol = p => s => 'http' + ((s) ? (p.secureProxyUsesHttp) ? ':' : 's:' : ':') + '//'
+var formPort     = p => s => s ? p.secureProxyUsesHttp ? (p.http.port || 80) : (p.https.port || 443) : (p.http.port || 80)
+var formProxyUrl = p => s => formProtocol(p)(s) + credentials(p) + p['http'+(s?'s':'')].host + ':' + formPort(p)(s)
 
 // ============================================================================
 // Define npm and GIT proxy settings
@@ -94,31 +98,32 @@ function Handler(pConf,hasGit,hasNpm) {
   
   function setEnvProxy(action) {
     var retCode = 0;
-    retCode += shelljs.exec((action === 'on' ? 'export http_proxy=' + httpProxy : 'unset http_proxy')).code;
-    retCode += shelljs.exec((action === 'on' ? 'export https_proxy=$http_proxy' : 'unset https_proxy')).code;
+    retCode += shelljs.exec((action === 'on' ? 'export http_proxy=' + httpProxy : 'unset http_proxy'),shhhh).code;
+    retCode += shelljs.exec((action === 'on' ? 'export https_proxy=$http_proxy' : 'unset https_proxy'),shhhh).code;
     return retCode;
   }
   this.setEnvProxy = setEnvProxy;
   
   if (hasNpm) {
     function setNpmProxy(action) {
-      var retCode = 0;
       utils.writeToConsole('log',[['\nSwitching %s npm proxy server'.warn, action]]);
-      retCode += shelljs.exec(npmProxyCmd + 'proxy ' + (action === 'on' ? httpProxy : 'null')).code;
-      retCode += shelljs.exec(npmProxyCmd + 'https-proxy ' + (action === 'on' ? httpProxy : 'null')).code;
-      return retCode;
+
+      return shelljs.exec(npmProxyCmd + 'proxy ' + (action === 'on' ? httpProxy : 'null'),shhhh).code +
+             shelljs.exec(npmProxyCmd + 'https-proxy ' + (action === 'on' ? httpProxy : 'null'),shhhh).code;
     };
+
     this.setNpmProxy = setNpmProxy;
   }
-   
+
   if (hasGit) {
     function setGitProxy(action) {
-      var retCode = 0;
       utils.writeToConsole('log',[['Switching %s git proxy server'.warn,action]]);
-      retCode += shelljs.exec(gitProxyCmd[action] + 'http.proxy ' + httpProxy).code;
-      retCode += shelljs.exec(gitProxyCmd[action] + 'https.proxy ' + httpsProxy).code;
-      return retCode;
+
+      // We must allow for 5 as a success return code from `git config`
+      return allow5(shelljs.exec(gitProxyCmd[action] + 'http.proxy ' + httpProxy,shhhh).code) +
+             allow5(shelljs.exec(gitProxyCmd[action] + 'https.proxy ' + httpsProxy,shhhh).code);
     };
+
     this.setGitProxy = setGitProxy;
   }
 };

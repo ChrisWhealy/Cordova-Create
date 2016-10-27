@@ -90,8 +90,9 @@ function propMetadata(md)   {
 };
 
 function defProp(name)  { Object.defineProperty(this.prototype, name[0], propMetadata(name[1])); };
-function isArray(obj)   { return Object.prototype.toString.apply(obj) === '[object Array]'; };
-function isNumeric(obj) { return !isArray(obj) && (obj-parseFloat(obj)+1) >= 0; }
+
+var isArray   = obj => Object.prototype.toString.apply(obj) === '[object Array]'
+var isNumeric = obj => !isArray(obj) && (obj - parseFloat(obj) + 1) >= 0
 
 // ============================================================================
 // Join two arrays eliminating duplicates
@@ -105,12 +106,19 @@ function union(a1, a2) {
 // Write stuff to various places
 // ============================================================================
 function writeToConsole(fn,consoleMessages) {
-  consoleMessages.map(function(msg) { console[fn].apply(this, msg); });
+//  console.log("writeToConsole received %s",consoleMessages);
+
+  consoleMessages.map(function(msg) {
+    console[fn].apply(this, msg)
+  });
+
   // writeToConsole never fails...
   return 0;
   };
 
-function writeStartBanner() { return writeToConsole('log', [[separator.help], [title.help], [separator.help]]); }
+function writeStartBanner() {
+  return writeToConsole('log', [[separator.help], [title.help], [separator.help]]);
+}
 
 // ============================================================================
 // Functions for file management
@@ -175,6 +183,13 @@ function dropFinalNL(str) {
   return (lfIdx == -1) ? str : str.substring(0,lfIdx);
 }
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Generate a summary message
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+function summaryMsg(errCount) {
+  return "All done with " + ((errCount === 1) ?  "1 error" : errCount + " errors")
+}
+
 
 // ============================================================================
 // Time and date handling functions
@@ -218,4 +233,6 @@ module.exports.writeToFile      = writeToFile;
 module.exports.writeToConsole   = writeToConsole;
 module.exports.writeStartBanner = writeStartBanner;
 module.exports.writeRestartInst = writeRestartInst;
+
+module.exports.summaryMsg = summaryMsg;
 

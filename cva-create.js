@@ -8,7 +8,7 @@
  * parameters
  * 
  * Author      : Chris Whealy (www.whealy.com)
- * Forked from : Cordova-Create by John M. Wargo (www.johnwargo.com)
+ *               Based on an original idea by John M. Wargo (www.johnwargo.com)
  * ============================================================================
  **/
 
@@ -204,7 +204,12 @@ var action = (userArgs[0] !== 'gen_config' &&
 //=============================================================================
 var cordovaCmd = 'cordova' + (execCtx.appConfig.cordovaDebug ? ' -d ' : ' ');
 
+//=============================================================================
+// Perform the user-defined action of 'gen_config', 'upgrade_config', 'restart'
+// or 'build'.
+//
 // 'build' is assumed to be the default action
+//=============================================================================
   switch (action) {
    // If we've just done a gen_config or an upgrade_config, then we're done
    case 'gen_config':
@@ -235,15 +240,13 @@ var cordovaCmd = 'cordova' + (execCtx.appConfig.cordovaDebug ? ' -d ' : ' ');
      // Check that we've got enough parameters to work with
      if (userArgs.length > 2) {
        var ac = execCtx.appConfig;
-       ac.targetFolder = userArgs[0];
-       ac.appId        = userArgs[1];
-       ac.appName      = userArgs[2];      
-       ac.platformArgs = userArgs.slice(3);
 
+       ac.targetFolder    = userArgs[0];
+       ac.appId           = userArgs[1];
+       ac.appName         = userArgs[2];      
+       ac.platformArgs    = userArgs.slice(3);
        ac.targetPlatforms = (ac.platformArgs.length > 0) ? ac.platformArgs : ac.platformList;
-       
-       // Check the target folder
-       ac.fqTargetFolder = execCtx.path.join(process.env.PWD, ac.targetFolder);
+       ac.fqTargetFolder  = execCtx.path.join(process.env.PWD, ac.targetFolder);
        
        if (execCtx.fs.existsSync(ac.fqTargetFolder)) {
          if (ac.replaceTargetDir) {
@@ -255,7 +258,8 @@ var cordovaCmd = 'cordova' + (execCtx.appConfig.cordovaDebug ? ' -d ' : ' ');
            process.exit(1);
          }
        }
-       
+
+       // Assemble the build instructions
        doBuild(execCtx);
      }
      else {
@@ -270,24 +274,29 @@ var cordovaCmd = 'cordova' + (execCtx.appConfig.cordovaDebug ? ' -d ' : ' ');
 // invoke the build instructions.  This could be a regular build or a restart
 //=============================================================================
   if (action !== 'gen_config' && action !== 'upgrade_config') {
+    // The build is performed by mapping the instructionHandler function over
+    // the buildInstructions array using the execution context object as the
+    // value of 'this'
     buildInstructions.map(instructionHandler, execCtx);
     execCtx.utils.writeRestartInst(buildInstructions,execCtx.appConfig);
   }
 
 //=============================================================================
-// Pack up and go home
+// Print execution summary, then we're done
 //=============================================================================
-  var idx = 0;
-
   elapseTime = execCtx.utils.interval(startTime);
-  var failedSteps = buildInstructions.reduce(function(acc,inst) { if (inst.c > 0) acc[idx++] = stepName(inst,true); return acc; },[]);
-  
+
+  // Did any of the build steps fail?
+  var failedSteps = buildInstructions.filter(bi => bi.c > 0);
+
+  // If any of the build steps failed
   if (failedSteps.length > 0) {
-    execCtx.utils.writeToConsole('log',[["\nThe following build steps failed".error], failedSteps]);
+    execCtx.utils.writeToConsole('log',[["\nThe following build steps failed:".error]]);
+    failedSteps.map(fs => execCtx.utils.writeToConsole('log',[[stepName(fs,true).warn]]));
   }
 
   execCtx.utils.writeToConsole('log',[["\nElapse time (min:sec) = %s:%s".help, elapseTime.minutes, elapseTime.seconds],
-                                      ["\nAll done with %s error%s\n".help,idx,(idx === 0 || idx > 1) ? 's' : '']]);
+                                      [execCtx.utils.summaryMsg(failedSteps.length).help]]);
 
 
   
@@ -299,6 +308,19 @@ var cordovaCmd = 'cordova' + (execCtx.appConfig.cordovaDebug ? ' -d ' : ' ');
 //=============================================================================
 // Private API functions
 //=============================================================================
+
+/***
+ * Ensure that the return code from each build steps is numeric. This is needed
+ * because some build steps return null
+ * 
+ * @param rc
+ *        A possibly null return code
+ * @returns
+ *       A numeric representation of the return code
+ */
+function parseRetCode(rc) {
+  return execCtx.utils.isNumeric(rc) ? rc : (rc === null) ? 1 : 0
+}
 
 /***
  * This function is mapped across the buildInstructions array to invoke each
@@ -319,14 +341,16 @@ function instructionHandler(inst,i,buildInstArray) {
   //  b) has never been executed, or
   //  c) failed last time it was attempted
   if (inst.m || inst.c !== 0) {
-    var retVal = (inst.lib) ? this[inst.lib][inst.fn].apply(this,inst.p) : this[inst.fn].apply(this,inst.p);
-    inst.c = (execCtx.utils.isNumeric(retVal)) ? retVal : (retVal === null) ? 1 : 0;      
+    // Execute the command and trap the reurn code (which might be null)
+    var retVal = (inst.lib) ? this[inst.lib][inst.fn].apply(this,inst.p)
+                            : this[inst.fn].apply(this,inst.p);
+    inst.c = parseRetCode(retVal);
     buildInstArray[i] = inst;
   }
   else {
     execCtx.utils.writeToConsole('log',[["Skipping successful step \"%s\"",stepName(inst)]]);
   }
-};
+}
 
 /***
  * Add instruction to build instructions array
@@ -347,7 +371,9 @@ function instructionHandler(inst,i,buildInstArray) {
  * @returns
  *        Nothing
  */
-function addInst(l,f,p,c,m) { this.push({lib:l, fn:f, p:p || [], c:c || -1, m:m || false}) };
+function addInst(l,f,p,c,m) {
+  this.push({lib:l, fn:f, p:p || [], c:c || -1, m:m || false});
+}
 
 /***
  * Build instruction step name
@@ -359,11 +385,19 @@ function addInst(l,f,p,c,m) { this.push({lib:l, fn:f, p:p || [], c:c || -1, m:m 
  * @returns
  *        String: The step name
  */
-function stepName(inst,addParams) { return (inst.lib ? inst.lib + '.' : '') + inst.fn + '(' + (addParams ? inst.p.join(',') : '') + ')'; }
+function stepName(inst,addParams) {
+  return (inst.lib ? inst.lib + '.' : '') + inst.fn + '(' + (addParams ? inst.p.join(',') : '') + ')';
+}
 
-//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-// Assemble the instructions to build the current project
-//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+/***
+ * Assemble all the instructions needed to build the current project
+ * 
+ * @param execCtx
+ *        Object: The current execution context
+ * @returns
+ *        Nothing: As a side-effect however, the buildInstructions object now
+ *                 contains all the instructions needed to build the project
+ */
 function doBuild(execCtx) {
 // If both the copyFrom and linkTo properties are set to valid directories, then
 // apart from being a nonsensical combination of configuration values, we will
@@ -385,11 +419,15 @@ function doBuild(execCtx) {
   if (logMsg.length > 0)
     buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,[['warn',logMsg]],null,true);
   
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Switch proxy server settings on or off as required
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   buildInstructions.addInst('proxySettings',execCtx.proxySettings.setNpmProxy.name, [(execCtx.appConfig.proxy.useProxy) ? 'on' : 'off']);
   buildInstructions.addInst('proxySettings',execCtx.proxySettings.setGitProxy.name, [(execCtx.appConfig.proxy.useProxy) ? 'on' : 'off']);
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Create Cordova project
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,
                                    ['log',[["\n\n%s",execCtx.utils.separator.warn],
                                            ["  Creating project".warn],
@@ -398,19 +436,25 @@ function doBuild(execCtx) {
                                    ['create '+execCtx.appConfig.targetFolder+' '+execCtx.appConfig.appId+' "'+
                                     execCtx.appConfig.appName+'" '+execCtx.appConfig.createParms+cmdSuffix]);
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Change into the target folder directory
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,
                                    ['log',[["\n\nChanging to project folder (%s)".warn, execCtx.appConfig.targetFolder]]],null,true);
   buildInstructions.addInst('shelljs',execCtx.shelljs.pushd.name,[execCtx.appConfig.targetFolder,execCtx.shhhh],null,true);
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Add platforms
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,
                                    ['log',[["\n\n%s",execCtx.utils.separator.warn],
                                            ['  Adding platforms [%s] to the project'.warn, execCtx.appConfig.targetPlatforms.join(', ')],
                                            [execCtx.utils.separator.warn]]],null,true);
   buildInstructions.addInst(null,execCtx.execCvaCmd.name,['platform add ' + execCtx.appConfig.targetPlatforms.join(' ')]);
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Add plugins
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,
                                    ['log',[["\n\n%s",execCtx.utils.separator.warn],
                                            ["  Adding Cordova Plugins".warn],
@@ -429,7 +473,9 @@ function doBuild(execCtx) {
   buildInstructions.addInst(null, (execCtx.appConfig.adjustConfigXml) ? execCtx.adjustConfigXmlFile.name : execCtx.noOp.name,
                                    [execCtx.appConfig.fqTargetFolder,execCtx.appConfig.configXmlWidget]);
   
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Run "cordova prepare"?
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if (execCtx.appConfig.runPrepare) {
     buildInstructions.addInst('utils',execCtx.utils.writeToConsole.name,
                                      ['log',[["\nRunning cordova prepare".warn]]],null,true);

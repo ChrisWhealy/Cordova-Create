@@ -116,9 +116,9 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
 2. Edit `cva-create.json` in your home directory as appropriate for your situation.
 
-  For instance, if you write apps that always use the plug-in `org.apache.cordova.network-information`, then adding this string to the list of plug-ins will mean it is automatically added to all projects built by `cva-create`.
+  For instance, if you write apps that always use the plug-in `cordova-plugin-network-information`, then adding this string to the list of plug-ins will mean it is automatically added to all projects built by `cva-create`.
 
-3. To create a new Cordova project, open a terminal window, navigate to the directory in which you want the project built and issue the `cva-create` command with the following pattern of arguments:
+3. To create a new Cordova project, open a terminal window, navigate to the directory in which you want the project built and execute the `cva-create` command with the following pattern of arguments:
 
 	`cva-create <app dir> <app id> <app name> <zero or more platform names>`
 
@@ -130,11 +130,11 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
   * `<app name>` is the name of the application seen by the user of the mobile device.
 
-  * `<platform names>` is an optional set of target platforms. If this list is omitted, then `cva-create` will look first at the default platforms listed in the Global Configuration file.  If any platforms are listed in the Local Configuration files, then the local values take precedence over the global values.
+  * `<platform names>` is an optional set of target platforms. If this list is omitted, then `cva-create` will look first at the default platforms listed in `cva-create.json` in your home directory (known as the Global Configuration file).  However, if any platforms are listed in the `cva-create.json` file in your project directory (known as the Local Configuration file), then the local values take precedence over the global values.
     
-  The first three parameters are the same as would be used with the Cordova CLI command `cordova create`.
+  The first three parameters to `cva-create` are exactly the same as would be used with the Cordova CLI command `cordova create`.
 
-  For instance, if Android and iOS are listed as the default platforms in the Global Configuration file, then to create a Cordova project for both of these platforms called "Thingamajig" in a directory called "thing_1" you would use the following command:
+  For instance, if Android and iOS are listed as the default platforms in the Global Configuration file, then to create a Cordova project for both of these platforms called `Thingamajig` in a directory called `thing_1` you would use the following command:
 
 	`cva-create thing_1 com.mycorp.thingamajig Thingamajig`
 
@@ -166,7 +166,7 @@ Steps are determined to have succeeded or failed based on their return code.  An
 
 Certain steps are deemed never to fail (such as writing to the console) and therefore always return zero.
 
-During a restart, any step that is recorded as having a non-zero return code will either be executed for the first time (if the return code is minus one), or repeated (if the return code is greater than zero).
+During a restart, any step that issues a non-zero return code will either be executed for the first time (if the return code is minus one), or repeated (if the return code is greater than zero).
 
 Certain steps *must* be repeated irrespective of whether they returned zero or not, such as the command to change into the Cordova project directory.
 
@@ -595,7 +595,7 @@ The `<feature>` element is a good example, since it can contain zero or more `<p
 
 <a name="header12"></a>
 ##12) Using Placeholders In `config.xml` Attributes and Content
-Generally speaking, most attribute values used by the XML elements in `config.xml` are simple string or Boolean values.  However, there are various attributes that often need to be set equal to values that have already been defined somewhere else.
+Generally speaking, most attribute values used by the XML elements in `config.xml` are simple string or Boolean values.  However, there are various attributes that often need to be set equal to values that have already been defined elsewhere.
 
 A typical example is for the attributes and content of the `<author>` element.  Here, you might want to set the email address and URL equal to values that have already been defined as `npm`, `git` or environment variables.
 
@@ -778,4 +778,4 @@ Assuming the various `git`, `npm`, and environment variables point to my own det
 
 
 * * *
-&copy; 2015 [Chris Whealy](http://whealy.com)
+&copy; 2016 [Chris Whealy](http://whealy.com)

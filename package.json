@@ -1,7 +1,7 @@
 {
   "name": "cva-create",
   "description": "A node command for creating a Cordova project based on configurable parameters",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "engines": {
     "node": ">= 0.10.0"
   },
@@ -34,7 +34,7 @@
   "homepage": "https://github.com/ChrisWhealy/Cordova-Create",
   "readmeFilename": "README.md",
   "gitHead": "8d308794b3ab8897a995976596a3ea3e22c6277d",
-  "_id": "cva-create@0.2.15",
+  "_id": "cva-create@0.2.16",
   "scripts": {},
   "_shasum": "65553a267e0a802ba35598d5c26d4ccabc2ab66f",
   "_from": "cva-create@"
