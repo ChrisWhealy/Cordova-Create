@@ -2,33 +2,45 @@
 #`cva-create`
 
 ##Table of Contents
-1. [Overview](#header1)  
-2. [Attribution](#header2)  
-3. [Requirements](#header3)  
-4. [Installation](#header4)  
-5. [Upgrade](#header5)  
-6. [Usage](#header6)  
-7. [Restarting a Failed Build](#header7)  
-8. [Global Configuration File](#header8)  
-9. [Configuration Property Names](#header9)  
-10. [Using a Local Configuration File](#header10)  
-11. [Adjusting the `config.xml` File](#header11)  
+1. [Upgrade to 0.4.0](#header0)  
+2. [Overview](#header1)  
+3. [Attribution](#header2)  
+4. [Requirements](#header3)  
+5. [Installation](#header4)  
+6. [Upgrade](#header5)  
+7. [Usage](#header6)  
+8. [Restarting a Failed Build](#header7)  
+9. [Global Configuration File](#header8)  
+10. [Configuration Property Names](#header9)  
+11. [Using a Local Configuration File](#header10)  
+12. [Adjusting the `config.xml` File](#header11)  
   1. [XML Element: No Attributes And A Simple String As Content](#header11_1)  
   2. [XML Element: One Or More Attributes And A Simple String As Content](#header11_2)  
   3. [Empty XML Element: One Or More Attributes But No Content](#header11_3)  
   4. [XML Element: One Or More Attributes And Structured Content](#header11_4)
-12. [Using Placeholders In `config.xml` Attributes and Content](#header12)  
+13. [Using Placeholders In `config.xml` Attributes and Content](#header12)  
   1. [Placeholder Syntax](#header12_1)  
   2. [Placeholder Usage](#header12_2)  
   3. [Simple Example](#header12_3)  
   4. [Multiple Placeholders](#header12_4)  
   5. [Placeholder Reference Errors](#header12_5)  
-13. [Full Example](#header13)
+14. [Full Example](#header13)
 
+
+
+<a name="header0"></a>
+##1) Upgrade to 0.4.0
+In version 0.4.0, the configuration parameter `createParms` is no longer used.  This means that you no longer need to specify any property values as double-escaped character strings such as `"\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\""`.  
+
+The `createParms` property has been replaced with the `pluginSearchPath` property whose value is a normal character string such as `"/usr/3rd-party/plugins"`.  
+
+After upgrading to version 0.4.0, please first run `cva-create upgrade_config` before building any projects.  This will ensure that your global and (if present) local configuration files have the old `createParms` property value transferred to the new `pluginSearchPath` property.
+
+[Top](#top)
 
 
 <a name="header1"></a>
-##1) Overview
+##2) Overview
 `cva-create` is a tool designed primarily to help people who regularly create Cordova projects.  If you're an occasional Cordova user, you might not find this tool so useful.
 
 `cva-create` creates a simple Cordova project for any platform and adds a configurable number of plug-ins.  In a single command, this tool performs the following sequence of Cordova CLI commands:
@@ -44,7 +56,7 @@
 
 
 <a name="header2"></a>
-##2) Attribution
+##3) Attribution
 `cva-create` is a fork of John Wargo's now obsolete [cordova-create tool](https://github.com/johnwargo/Cordova-Create).  `Cordova-Create` has now been replaced by [cdva-create](https://github.com/johnwargo/cdva-create).
 
 John is the author of several books on PhoneGap and Cordova such as [Apache Cordova 3 Programming](http://www.cordovaprogramming.com). For more details, see [John's website](http://www.johnwargobooks.com).
@@ -54,7 +66,7 @@ John is the author of several books on PhoneGap and Cordova such as [Apache Cord
 
 
 <a name="header3"></a>
-##3) Requirements
+##4) Requirements
 This module expects the following software already to be installed, configured and working:
 
 1. An Apache Cordova development environment, including the appropriate native SDKs (Android Development Tools, Xcode etc.)
@@ -65,7 +77,7 @@ This module expects the following software already to be installed, configured a
 
 
 <a name="header4"></a>
-##4) Installation
+##5) Installation
 Install this module globally using `npm`.  From a terminal window, execute the following command:
 
 Windows:
@@ -93,7 +105,7 @@ Alternatively, if you've downloaded the ZIP file from GitHub, you can install th
 
 
 <a name="header5"></a>
-##5) Upgrade
+##6) Upgrade
 If you are upgrading `cva-create` from a previous version, before running a build with the new version, first run:
 
     cva-create upgrade_config
@@ -107,8 +119,8 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
 
 <a name="header6"></a>
-##6) Usage
-1. If this is the first time you have used `cva-create`, then you must start by creating the global configuration file.  Open a terminal window and run:
+##7) Usage
+1. If this is the first time you have used `cva-create`, then you should start by creating the global configuration file.  Open a terminal window and run:
 
     `cva-create gen_config`
   
@@ -151,7 +163,7 @@ Running `cva-create upgrade_config` will not build a Cordova project.
 
 
 <a name="header7"></a>
-##7) Restarting a Failed Build
+##8) Restarting a Failed Build
 In the event that a particular step of the build process fails, `cva-create` will stop at the first failed step.  Once you have fixed the cause of the failure, you do not need to repeat the earlier steps of the build that completed successfully, you can restart the build by issuing the command:
 
   `cva-create restart`
@@ -173,7 +185,7 @@ Certain steps *must* be repeated irrespective of whether they returned zero or n
 If you have configured `cva-create` to run the `cordova prepare` command, then during a restart this step will *always* be repeated.  This is necessary because as a result of the restart, new plugins might have been added.  Therefore, rather than attempting to calculate whether a previous failure requires the `cordova prepare` statement to be rerun, it is simplest to arbitrarily rerun this step.
 
 <a name="header8"></a>
-##8) Global Configuration File
+##9) Global Configuration File
 When the `cva-create` tool is run using only the `gen_config` parameter, if the file `cva-create.json` does not exist in your home directory, then it will be created with default values. If this file already exists, then it will remain unmodified.  Either way, a Cordova project will not be created.
 
 On Windows you can find the global configuration file in the directory `c:\users\<user_name>` (replacing `<user_name>` with the logon name of the current user).
@@ -186,7 +198,7 @@ When a global configuration file is created for the first time on a Mac, it will
       "cordovaDebug": false,
       "copyFrom": "",
       "linkTo": "",
-      "createParms": "",
+      "pluginSearchPath": "",
       "replaceTargetDir": false,
       "runPrepare": false,
       "pluginList": [
@@ -230,7 +242,7 @@ If you are running on some other operating system, then the only difference will
 
 
 <a name="header9"></a>
-##9) Configuration Property Names
+##10) Configuration Property Names
 * `cordovaDebug : Boolean`
 
   Switches the Cordova `-d` flag on or off.  With this option set to true, additional debug information will be written to the console as the Cordova CLI commands are executed.
@@ -255,9 +267,9 @@ If you are running on some other operating system, then the only difference will
                   Yes --> Use this value for the --linkTo parameter
                   No  --> "cordova create" will be run using neither the --copyFrom nor --linkTo parameters
 
-* `createParms : String`
+* `pluginSearchPath : String`
 
-  A string representing a double-escaped JSON object containing parameters such as the path name to a local plug-ins directory
+  A string containing the path name of a local plug-ins directory. If present, this becomes the value of the `--searchpath` parameter used by the `cordova plugin add` command
 
 * `replaceTargetDir : Boolean`
 
@@ -342,7 +354,7 @@ To change the project's configuration, edit the file, providing your own values 
 
 
 <a name="header10"></a>
-##10) Using a Local Configuration File
+##11) Using a Local Configuration File
 If you choose to create a local configuration file, then:
 
 1. This file must live in the same directory from which the `cva-create` command is run.
@@ -357,7 +369,7 @@ For instance, a local configuration file could contain the following:
     {
       "cordovaDebug"     : true,
       "linkTo"           : "./demo_www",
-      "createParms"      : "\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\"",
+      "pluginSearchPath" : "/usr/3rd-party/plugins",
       "replaceTargetDir" : true,
       "runPrepare"       : true,
       "platformList"     : ['ios'],
@@ -391,23 +403,9 @@ Other than the list of plug-ins, all values in the local configuration file will
 
    The cordova "www" directory will be linked to an existing directory accessed using the relative pathname `./demo_www`
 
-3. `"createParms": "\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\""`
+3. `"pluginSearchPath": "/usr/3rd-party/plugins"`
 
-   We want to use some 3rd-party Cordova plug-ins that live in the `"/usr/3rd-party/plugins/"` directory.
-
-   Notice that the string value has been escaped twice.  This results in the need for a triple backslash in certain places!
-   
-   This is necessary because when the value is read from the file, one level of escape characters will be consumed.  Whatever string remains must still retain the correct escape syntax to allow embedded double-quote characters:
-   
-   Parsing this double-escaped string removes one level of escape characters, so:
-   
-   `"\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\""`
-   
-   becomes:
-
-   `"{\"plugin_search_path\": \"/usr/3rd-party/plugins\"}"`
-
-   This parsed string value now contains correctly escaped double quote characters and can be passed as a parameter to the `cordova create` command.
+   We want to use some 3rd-party Cordova plug-ins that cannot be found on `npmjs.org`.  In this case, the plugins have been locally installed in the `"/usr/3rd-party/plugins/"` directory.
 
 4. `"replaceTargetDir": true`
 
@@ -441,7 +439,7 @@ Other than the list of plug-ins, all values in the local configuration file will
 
 
 <a name="header11"></a>
-##11) Adjusting the `config.xml` File
+##12) Adjusting the `config.xml` File
 When a new Cordova project is created, the basic, OS independent properties of that project are defined in a file called `config.xml`. A default `config.xml` file looks something like this:
 
     <?xml version='1.0' encoding='utf-8'?>
@@ -594,13 +592,13 @@ The `<feature>` element is a good example, since it can contain zero or more `<p
 
 
 <a name="header12"></a>
-##12) Using Placeholders In `config.xml` Attributes and Content
+##13) Using Placeholders In `config.xml` Attributes and Content
 Generally speaking, most attribute values used by the XML elements in `config.xml` are simple string or Boolean values.  However, there are various attributes that often need to be set equal to values that have already been defined elsewhere.
 
 A typical example is for the attributes and content of the `<author>` element.  Here, you might want to set the email address and URL equal to values that have already been defined as `npm`, `git` or environment variables.
 
 <a name="header12_1"></a>
-###12.1) Placeholder Syntax
+###13.1) Placeholder Syntax
 Instead of repeating a value defined elsewhere, you can reference it using a placeholder.  Three placeholders are recognised:
 
 `$git()` - Reference a `git` variable  
@@ -608,7 +606,7 @@ Instead of repeating a value defined elsewhere, you can reference it using a pla
 `$env()` - Reference an environment variable available to NodeJS via its `process.env` object
 
 <a name="header12_2"></a>
-###12.2) Placeholder Usage
+###13.2) Placeholder Usage
 Only the XML attributes `email` and `href` will be parsed for placeholders; however, if the content of an XML element is a simple string value, then this string value may contain any number of placeholders.
 
 If, for instance, you want to pick up the value of the `git` variable `user.email`, simply use the following string somewhere inside the attribute or content string value:
@@ -624,7 +622,7 @@ Finally, to pick up the value of an environment variable, use:
     $env(USER)
 
 <a name="header12_3"></a>
-###12.3) Simple Example
+###13.3) Simple Example
 Using the above information, you could now define the `<author>` element of `config.xml` something like this:
 
     {
@@ -636,7 +634,7 @@ Using the above information, you could now define the `<author>` element of `con
 
 
 <a name="header12_4"></a>
-###12.4) Multiple Placeholders
+###13.4) Multiple Placeholders
 You can add as many placeholders as you like within a single string value.  So for instance, you might choose to define the content of the `<author>` element like this:
 
     "content": ["Written by $env(USER), better known as $npm(init.author.name) and whose email address is either $git(user.email) or $npm(init.author.email)"]
@@ -645,7 +643,7 @@ Assuming you have referenced an existing variable, all placeholders will be subs
 
 
 <a name="header12_5"></a>
-###12.5) Placeholder Reference Errors
+###13.5) Placeholder Reference Errors
 **IMPORTANT**
 
 1. If you reference a variable name that does not exist, then the placeholder will be replaced with an empty string.
@@ -655,7 +653,7 @@ Assuming you have referenced an existing variable, all placeholders will be subs
 
 
 <a name="header13"></a>
-##13) Full Example
+##14) Full Example
 Here is full (if somewhat excessive) example.  In this example, the Global Configuration file contains the following additional information (over and above the defaults).
 
 1. The list of default plug-ins has been extended in both the global and local config files
@@ -672,7 +670,7 @@ The Global Configuration file looks like this:
       "cordovaDebug": false,
       "copyFrom": "",
       "linkTo": "",
-      "createParms": "",
+      "pluginSearchPath": "",
       "replaceTargetDir": false,
       "runPrepare": false,
       "pluginList": [
@@ -727,9 +725,9 @@ Notice that the definition of the `<preference>` element having the name `LoadUr
 If any other duplicate `configXmlWidget` elements appear in both the global and local configuration files, then both values will appear in the adjusted `config.xml` file.
 
     {
-      "linkTo"       : "./demo_www",
-      "createParms"  : "\"{\\\"plugin_search_path\\\": \\\"/usr/3rd-party/plugins\\\"}\"",
-      "replaceTargetDir": false,
+      "linkTo"           : "./demo_www",
+      "pluginSearchPath" : "/usr/3rd-party/plugins",
+      "replaceTargetDir" : false,
       "pluginList"   : [
           "https://github.com/vstirbu/PromisesPlugin.git",
           "com.3rd-party.plugins.do-that",

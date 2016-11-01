@@ -13,6 +13,7 @@ If you have just upgraded cva-create to the latest version, then first run:
 When this has completed, the global cva-create.json file in your home
 directory will contain any new properties used by the latest version.
 Existing property values in cva-create.json will not be touched.
+If you have a local cva-create.json file, this will also be upgraded.
 
 
 To create a new project using this command, open a terminal window and navigate

@@ -11,19 +11,20 @@
  * Author : Chris Whealy (www.whealy.com)
  * ============================================================================
  **/
+var whoAmI  = "Config";
+var traceOn = false;
 
 var utils  = require('./utils.js');
 var colors = require('colors');
 
 var fs      = utils.wrapLib(require('fs'));
 var path    = utils.wrapLib(require('path'));
-//var os      = utils.wrapLib(require('os'));
 var shelljs = utils.wrapLib(require('shelljs'));
 
+var trace = utils.trace(traceOn);
 
 var shhhh     = {silent:true};
 var rw_r__r__ = '0644';
-var fName     = "cva-create.json";
 
 colors.setTheme({ info: 'grey', help: 'green', warn: 'yellow', debug: 'blue', error: 'red' });
 
@@ -52,6 +53,11 @@ var proxyDef = {
   https               : server
 };
 
+var configFiles = {
+  globalConfig : { path : "", exists : false },
+  localConfig  : { path : "", exists : false }
+}
+
 // ============================================================================
 // Build environment flags
 // ============================================================================
@@ -61,9 +67,14 @@ var buildEnv = {
 }
 
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-var defaultPlatformList = (function(p) {
-  return (utils.isWindows) ? p.windows : (utils.isOSX) ? p.osx : (utils.isLinux) ? p.linux : p.unknown;
-})(platformsByOS);
+var defaultPlatformList = (p => (utils.isWindows)
+                                ? p.windows
+                                : (utils.isOSX)
+                                  ? p.osx
+                                  : (utils.isLinux)
+                                    ? p.linux
+                                    : p.unknown)
+                          (platformsByOS);
 
 /***
  * Generic XML element:
@@ -88,12 +99,20 @@ var xmlElement = {
 
 // ============================================================================
 // Constructor
+//
+// 1) Determine if the global config file exists
+//    a) If it does not, create it using values from the constructor's prototype
+//    b) If it does, then merge its contents into the default values
+// 2) Determine if a local config file exists
+//    a) If it does not, then we're done
+//    b) If it does, then merge its contents into the default values
 // ============================================================================
 function Config(action) {
-  var homeEnv          = (utils.isWindows) ? 'USERPROFILE' : 'HOME';
-  var homePath         = process.env[homeEnv];
-  var localConfigFile  = path.join(".", fName);
-  var globalConfigFile = path.join(homePath, fName);
+  trace(whoAmI,"Constructor",true);
+
+  var fName    = "cva-create.json";
+  var homeEnv  = (utils.isWindows) ? 'USERPROFILE' : 'HOME';
+  var homePath = process.env[homeEnv];
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // Check that the user's home path can be identified
@@ -105,36 +124,32 @@ function Config(action) {
          ["Please set the environment variable " + homeEnv + " to a valid location"]]);
     process.exit(1);
   }
-  
-  this.configFiles.globalConfig.path = globalConfigFile
-  this.configFiles.localConfig.path  = localConfigFile;
 
-  this.configFiles.globalConfig.exists = fs.existsSync(globalConfigFile);
-  this.configFiles.localConfig.exists  = fs.existsSync(localConfigFile);
+  var localConfigFile  = path.join(".", fName);
+  var globalConfigFile = path.join(homePath, fName);
   
-  // The global config object will contain either the contents of the global config
-  // file (if it exists), or the default values from the prototype 
-  var globalConfig = (this.configFiles.globalConfig.exists)
-                     ? utils.readJSONFile(this.configFiles.globalConfig.path)
-                     : Config.prototype;
+  this.configFiles.globalConfig.path   = globalConfigFile
+  this.configFiles.globalConfig.exists = fs.existsSync(globalConfigFile);
+
+  this.configFiles.localConfig.path   = localConfigFile;
+  this.configFiles.localConfig.exists = fs.existsSync(localConfigFile);
   
   // Does the global config file already exist?
   if (this.configFiles.globalConfig.exists) {
-    // Yup, so merge it with values from the prototype. The merge guarantees that
-    // all property values exist and have at least a default value
-    mergeProperties(globalConfig, this);
+    // Yup, so read that file and merge its contents with values from the prototype.
+    // The merge guarantees that all property values exist and have at least a
+    // default value
+    mergeProperties("global",utils.readJSONFile(this.configFiles.globalConfig.path), this);
   }
   else {
-    // Nope, so create a global configuration file using the prototype defaults
-    // and update the config properties
-    utils.writeToFile(this.configFiles.globalConfig.path, JSON.stringify(Config.prototype, null, 2), rw_r__r__);
-    this.configFiles.globalConfig.exists = true;
+    // Nope, so create a global configuration file
+    generateGlobalConfig(this);
   }
   
-  // Now read the local configuration file
-  var localConfig = utils.readJSONFile(this.configFiles.localConfig.path);
-  
-  mergeProperties(localConfig, this);
+  // Now read the local configuration file and merge its contents with the global values
+  mergeProperties("local",utils.readJSONFile(this.configFiles.localConfig.path), this);
+
+  trace(whoAmI,"Constructor",false);
 }
 
 
@@ -150,31 +165,54 @@ function Config(action) {
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // Generate a global config file
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-function generateGlobalConfig() {
-  utils.writeToConsole('log',[["Creating global configuration file %s", this.configFiles.globalConfig.path]]);
-  utils.writeToFile(this.configFiles.globalConfig.path, JSON.stringify(globalConfig, null, 2), rw_r__r__);
-  this.configFiles.globalConfig.exists = true;
+function generateGlobalConfig(gc) {
+  trace(whoAmI,"generateGlobalConfig",true);
+
+  utils.writeToFile(gc.configFiles.globalConfig.path, JSON.stringify(gc, null, 2), rw_r__r__);
+  gc.configFiles.globalConfig.exists = true;
+
+  trace(whoAmI,"generateGlobalConfig",false);
 };
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // Upgrade the global config file so that it contains any new properties in the
 // latest version of cva-create.
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-function upgradeGlobalConfig(oldGlobal, newGlobal) {
-  utils.writeToConsole('log',[["Upgrading global configuration file %s", this.configFiles.globalConfig.path]]);
-
-  for (var p in newGlobal) {
-    if (!(p in oldGlobal)) {
-      utils.writeToConsole('log',[["Adding property %s to global config",p]]);
-      oldGlobal[p] = newGlobal[p];      
-    }
-    else
-      if (typeof oldGlobal[p] == 'object')
-        oldGlobal[p] = upgradeGlobalConfig(oldGlobal[p], newGlobal[p]);      
-  }
-  
-  return oldGlobal;
+function upgradeGlobalConfig(pathname) {
+  return upgradeConfig(pathname,"global");
 };
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Upgrade the global config file so that it contains any new properties in the
+// latest version of cva-create.
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+function upgradeLocalConfig(pathname,newLocalConfig) {
+  return upgradeConfig(pathname,"local");
+};
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Replace renamed property
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+function replaceProperty(config) {
+  // Look for old property names that need to be renamed
+  // Does the "createParms" property exist?
+  if (config["createParms"] !== undefined) {
+    // Does "createParms" have a value?
+    if (config["createParms"] !== "") {
+      // If the "createParms" property has a value, it must be a double-escaped JSON string
+      // When parsed twice, we expect that string to contain the property plugin_search_path
+      var psp = JSON.parse(JSON.parse(config["createParms"])).plugin_search_path;
+
+      // Transfer old value to new property
+      config.pluginSearchPath = (psp) ? psp : "";
+    }
+
+    // Delete the old property
+    delete config.createParms;
+  }
+
+  return config;
+}
 
 // ============================================================================
 // Create enumerable properties and functions for Config.prototype
@@ -184,31 +222,32 @@ function upgradeGlobalConfig(oldGlobal, newGlobal) {
   Config.prototype.replaceTargetDir = false;
   Config.prototype.adjustConfigXml  = false;
 
-  Config.prototype.copyFrom     = "";
-  Config.prototype.linkTo       = "";
-  Config.prototype.buildEnv     = buildEnv;
-  Config.prototype.createParms  = "";
+  Config.prototype.copyFrom         = "";
+  Config.prototype.linkTo           = "";
+  Config.prototype.pluginSearchPath = "";
 
-  Config.prototype.defaultPlugins  = defaultPlugins;
   Config.prototype.pluginList      = [];
   Config.prototype.platformList    = defaultPlatformList;
   Config.prototype.proxy           = proxyDef;
   Config.prototype.configXmlWidget = [xmlElement];
 
-  Config.prototype.configFiles = {
-    globalConfig : { path : '', exists : false },
-    localConfig  : { path : '', exists : false }
-  };
-
 // ============================================================================
 // Create non-enumerable properties and functions for Config.prototype
+// 
+// Making these properties non-enumerable ensures that they will not be
+// encountered during a `for in` loop
 // ============================================================================
 [['isWindows', {e:false, w:true,  c:false, v:utils.isWindows}],
  ['isLinux',   {e:false, w:true,  c:false, v:utils.isLinux}],
  ['isOSX',     {e:false, w:true,  c:false, v:utils.isOSX}],
 
- ['generateGlobalConfig', {e:true,  w:false,  c:false, v:generateGlobalConfig}],
- ['upgradeGlobalConfig',  {e:true,  w:false,  c:false, v:upgradeGlobalConfig}]
+ ['buildEnv',       {e:false, w:true, c:true, v:buildEnv}],
+ ['defaultPlugins', {e:false, w:true, c:true, v:defaultPlugins}],
+ ['configFiles',    {e:false, w:true, c:true, v:configFiles}],
+
+ ['generateGlobalConfig', {e:true, w:false, c:false, v:generateGlobalConfig}],
+ ['upgradeGlobalConfig',  {e:true, w:false, c:false, v:upgradeGlobalConfig}],
+ ['upgradeLocalConfig',   {e:true, w:false, c:false, v:upgradeLocalConfig}]
 ].map(utils.defProp,Config);
 
 
@@ -222,27 +261,108 @@ function upgradeGlobalConfig(oldGlobal, newGlobal) {
 // ============================================================================
 // Private API
 // ============================================================================
- 
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 // Merge properties from the source object into the destination object.
 // This will merge values read from either the global or local config files into
 // the current instance
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-function mergeProperties(src, dest) {
+function mergeProperties(fromStr, src, dest) {
+  trace(whoAmI,"mergeProperties",true);
   var unite = false;
   
   for (var p in src) {
-    if (p in dest) {
-      unite = (utils.isArray(src[p]) && (p === 'pluginList' || p === 'configXmlWidget'));
+    unite = (utils.isArray(src[p]) && (p === 'pluginList' || p === 'configXmlWidget'));
+
+    // The local pluginList and configXmlWidget values must be merged with the
+    // global values.  In all other cases, the local value overrides the global
+    // value
+    dest[p] = (unite) ? utils.union(dest[p], src[p]) : src[p];
+  }
+
+  trace(whoAmI,"mergeProperties",false);
+};
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Upgrade a config file
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+function upgradeConfig(pathname,location) {
+  trace(whoAmI,"upgradeConfig",true);
+  utils.writeToConsole('log',[["Upgrading %s configuration file %s", location, pathname]]);
+
+  // Read config file replacing any renamed properties
+  var config = replaceProperty(utils.readJSONFile(pathname));
+
+  // Upgrade the config object and write the file
+  var upgradedConfig = (location === "global")
+                       ? upgradeGlobalConfigObject(config, Config.prototype)
+                       : upgradeLocalConfigObject(config, Config.prototype);
+
+  utils.writeToFile(pathname, JSON.stringify(upgradedConfig, null, 2), rw_r__r__);
   
-      // The local pluginList and configXmlWidget values must be merged with the
-      // global values.  In all other cases, the local value overrides the global
-      // value
-      dest[p] = (unite) ? utils.union(dest[p], src[p]) : src[p];
+  trace(whoAmI,"upgradeConfig",false);
+  return upgradedConfig;
+};
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Upgrade global configuration object with new properties
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+function upgradeGlobalConfigObject(oldConfig, newConfig) {
+  trace(whoAmI,"upgradeGlobalConfigObject",true);
+
+  for (var p in newConfig) {
+    if (!(p in oldConfig)) {
+      oldConfig[p] = newConfig[p];      
     }
-    else {
-      utils.writeToConsole('log',[["Ignoring unknown property %s in the config file".warn, p]]);
+    else
+      if (typeof oldConfig[p] === 'object')
+        oldConfig[p] = upgradeGlobalConfigObject(oldConfig[p], newConfig[p]);      
+  }
+  
+  trace(whoAmI,"upgradeGlobalConfigObject",false);
+  return oldConfig;
+};
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Upgrade local configuration object with new properties
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+function upgradeLocalConfigObject(oldConfig, newConfig) {
+  trace(whoAmI,"upgradeLocalConfigObject",true);
+
+  for (var newProp in newConfig) {
+    if (newProp in oldConfig &&
+        typeof oldConfig[newProp] === 'object') {
+      oldConfig[newProp] = upgradeLocalConfigObject(oldConfig[newProp], newConfig[newProp]);
     }
   }
+  
+  trace(whoAmI,"upgradeLocalConfigObject",false);
+  return oldConfig;
 };
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+// Replace renamed property
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+function replaceProperty(config) {
+  // Look for old property names that need to be renamed
+  // Does the "createParms" property exist?
+  if (config["createParms"] !== undefined) {
+    // Does "createParms" have a value?
+    if (config["createParms"] !== "") {
+      // If the "createParms" property has a value, it must be a double-escaped JSON string
+      // When parsed twice, we expect that string to contain the property plugin_search_path
+      var psp = JSON.parse(JSON.parse(config["createParms"])).plugin_search_path;
+
+      // Transfer old value to new property
+      config.pluginSearchPath = (psp) ? psp : "";
+    }
+
+    // Delete the old property
+    delete config.createParms;
+  }
+
+  return config;
+}
+
+
 

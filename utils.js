@@ -10,7 +10,11 @@
  * ============================================================================
  **/
 
-function noOp() {}
+var noOp  = function() {}
+var trace = function(t) {
+  return t ? function(l,f,ent) { console.log("%s %s.%s",(ent ? "--->" : "<---"),l,f); }
+           : noOp
+}
 
 /***
  * * * * * * * * * * * * * * * RESTART CAPABILITY * * * * * * * * * * * * * * * 
@@ -216,6 +220,7 @@ module.exports.separator = separator;
 
 module.exports.showHelp = showHelp;
 
+module.exports.trace   = trace;
 module.exports.wrapLib = wrapLib;
 
 module.exports.isArray   = isArray;
